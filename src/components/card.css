@@ -1,0 +1,67 @@
+.uno-card {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 9px;
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+  transition: transform 0.15s ease, filter 0.15s ease;
+  animation: card-arrive 0.25s ease;
+}
+
+@keyframes card-arrive {
+  from {
+    transform: translateY(-14px) scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.uno-card-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.uno-card-sm {
+  width: 42px;
+  height: 63px;
+}
+
+.uno-card-md {
+  width: 72px;
+  height: 108px;
+}
+
+.uno-card-lg {
+  width: 92px;
+  height: 138px;
+}
+
+.uno-card-clickable {
+  cursor: pointer;
+}
+
+.uno-card-playable {
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.85)) drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
+}
+
+.uno-card-playable:hover {
+  transform: translateY(-14px) scale(1.06);
+}
+
+@media (max-width: 700px) {
+  .uno-card-sm {
+    width: 30px;
+    height: 45px;
+  }
+  .uno-card-md {
+    width: 56px;
+    height: 84px;
+  }
+  .uno-card-lg {
+    width: 70px;
+    height: 105px;
+  }
+}
