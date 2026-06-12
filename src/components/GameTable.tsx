@@ -1,4 +1,6 @@
-import { useGame, type GameSettings } from '../hooks/useGame'
+import type { ReactNode } from 'react'
+import { handSize } from '../net/redact'
+import type { GameApi } from '../hooks/useGame'
 import { ColorPicker } from './ColorPicker'
 import { Hand } from './Hand'
 import { OpponentSeat } from './OpponentSeat'
@@ -8,31 +10,37 @@ import { WinScreen } from './WinScreen'
 import './table.css'
 
 interface GameTableProps {
-  settings: GameSettings
-  onPlayAgain: () => void
-  onChangeSettings: () => void
+  game: GameApi
+  /** undefined = this player can't restart (guest) — win screen says to ask the host */
+  onPlayAgain?: () => void
+  onLeave: () => void
+  /** extra host-only UI such as disconnect banners */
+  banner?: ReactNode
 }
 
-export function GameTable({ settings, onPlayAgain, onChangeSettings }: GameTableProps) {
-  const game = useGame(settings)
-  const { state } = game
-  const human = state.players[0]
-  const bots = state.players.slice(1)
+export function GameTable({ game, onPlayAgain, onLeave, banner }: GameTableProps) {
+  const { state, viewerId } = game
+  const viewer = state.players[viewerId]
+  const others = [
+    ...state.players.slice(viewerId + 1),
+    ...state.players.slice(0, viewerId),
+  ]
 
-  const myTurn = state.phase === 'play' && state.currentPlayer === 0 && state.winner === null
+  const myTurn = state.phase === 'play' && state.currentPlayer === viewerId && state.winner === null
   const canTakePenalty = myTurn && state.pendingDraw > 0
   const canDraw = myTurn && state.pendingDraw === 0 && state.drawnCardId === null
   const legalIds = new Set(game.humanLegal.map((c) => c.id))
   const lastEvent = state.events[state.events.length - 1]
 
-  const showColorPicker = state.phase === 'chooseColor' && state.currentPlayer === 0
-  const showChallenge = state.phase === 'challenge' && state.pendingWild4?.targetId === 0
-  const showUno = human.hand.length <= 2 && !human.calledUno && state.winner === null
+  const showColorPicker = state.phase === 'chooseColor' && state.currentPlayer === viewerId
+  const showChallenge = state.phase === 'challenge' && state.pendingWild4?.targetId === viewerId
+  const showUno = handSize(viewer) <= 2 && !viewer.calledUno && state.winner === null
 
   return (
     <div className="table">
+      {banner}
       <div className="table-top">
-        {bots.map((p) => (
+        {others.map((p) => (
           <OpponentSeat
             key={p.id}
             player={p}
@@ -56,20 +64,21 @@ export function GameTable({ settings, onPlayAgain, onChangeSettings }: GameTable
       <div className={myTurn ? 'table-bottom my-turn' : 'table-bottom'}>
         <div className="bottom-bar">
           <div className="player-name">
-            {human.name}
-            {human.calledUno && human.hand.length === 1 && <span className="uno-badge">UNO!</span>}
+            {viewer.name}
+            {viewer.calledUno && handSize(viewer) === 1 && <span className="uno-badge">UNO!</span>}
             {myTurn && <span className="turn-tag">Your turn</span>}
           </div>
           <UnoControls
             state={state}
+            viewerId={viewerId}
             showUno={showUno}
             onCallUno={game.callUno}
-            onCatch={game.catchBot}
+            onCatch={game.catchPlayer}
             canPass={myTurn && state.drawnCardId !== null}
             onPass={game.pass}
           />
         </div>
-        <Hand cards={human.hand} legalIds={legalIds} myTurn={myTurn} onPlay={game.playCard} />
+        <Hand cards={viewer.hand} legalIds={legalIds} myTurn={myTurn} onPlay={game.playCard} />
       </div>
 
       {showColorPicker && <ColorPicker onPick={game.chooseColor} />}
@@ -95,7 +104,7 @@ export function GameTable({ settings, onPlayAgain, onChangeSettings }: GameTable
       )}
 
       {state.phase === 'roundOver' && (
-        <WinScreen state={state} onPlayAgain={onPlayAgain} onChangeSettings={onChangeSettings} />
+        <WinScreen state={state} viewerId={viewerId} onPlayAgain={onPlayAgain} onLeave={onLeave} />
       )}
     </div>
   )

@@ -90,6 +90,22 @@ describe('initGame', () => {
     expect(state.discardPile[0].value).not.toBe('wild4')
     expect(state.drawPile.length + state.discardPile.length + 28).toBe(108)
   })
+
+  it('accepts explicit seats mixing humans and bots in turn order', () => {
+    const state = initGame({
+      seats: [
+        { name: 'Gary', isHuman: true },
+        { name: 'Maya', isHuman: false },
+        { name: 'Amy', isHuman: true },
+        { name: 'Leo', isHuman: false },
+      ],
+      rules: DEFAULT_RULES,
+      seed: 2,
+    })
+    expect(state.players.map((p) => p.name)).toEqual(['Gary', 'Maya', 'Amy', 'Leo'])
+    expect(state.players.map((p) => p.isHuman)).toEqual([true, false, true, false])
+    for (const p of state.players) expect(p.hand).toHaveLength(7)
+  })
 })
 
 describe('playing cards', () => {

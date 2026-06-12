@@ -8,27 +8,33 @@ import type {
   PlayerState,
 } from './types'
 
-const BOT_NAMES = ['Maya', 'Leo', 'Zara', 'Finn', 'Ivy']
+export const BOT_NAMES = ['Maya', 'Leo', 'Zara', 'Finn', 'Ivy']
 const HAND_SIZE = 7
 const MAX_EVENTS = 30
 
 export function initGame(config: GameConfig): GameState {
-  const playerCount = config.botCount + 1
+  const seats =
+    config.seats ??
+    [
+      { name: config.playerName || 'You', isHuman: true },
+      ...Array.from({ length: config.botCount ?? 0 }, (_, i) => ({
+        name: BOT_NAMES[i],
+        isHuman: false,
+      })),
+    ]
+  const playerCount = seats.length
   let seed = config.seed ?? Math.floor(Math.random() * 2 ** 31)
   const shuffled = shuffle(buildDeck(), seed)
   seed = shuffled.seed
   let drawPile = shuffled.cards
 
-  const players: PlayerState[] = [
-    { id: 0, name: config.playerName || 'You', isHuman: true, hand: [], calledUno: false },
-    ...Array.from({ length: config.botCount }, (_, i) => ({
-      id: i + 1,
-      name: BOT_NAMES[i],
-      isHuman: false,
-      hand: [] as Card[],
-      calledUno: false,
-    })),
-  ]
+  const players: PlayerState[] = seats.map((seat, i) => ({
+    id: i,
+    name: seat.name,
+    isHuman: seat.isHuman,
+    hand: [],
+    calledUno: false,
+  }))
   for (let i = 0; i < HAND_SIZE; i++) {
     for (const p of players) p.hand.push(drawPile.pop()!)
   }

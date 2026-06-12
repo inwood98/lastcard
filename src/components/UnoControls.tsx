@@ -1,7 +1,9 @@
 import type { GameState } from '../engine/types'
+import { handSize } from '../net/redact'
 
 interface UnoControlsProps {
   state: GameState
+  viewerId: number
   showUno: boolean
   onCallUno: () => void
   onCatch: (targetId: number) => void
@@ -9,9 +11,17 @@ interface UnoControlsProps {
   onPass: () => void
 }
 
-export function UnoControls({ state, showUno, onCallUno, onCatch, canPass, onPass }: UnoControlsProps) {
+export function UnoControls({
+  state,
+  viewerId,
+  showUno,
+  onCallUno,
+  onCatch,
+  canPass,
+  onPass,
+}: UnoControlsProps) {
   const catchable = state.players.filter(
-    (p) => !p.isHuman && p.hand.length === 1 && !p.calledUno && state.winner === null,
+    (p) => p.id !== viewerId && handSize(p) === 1 && !p.calledUno && state.winner === null,
   )
   return (
     <div className="uno-controls">

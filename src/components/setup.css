@@ -143,3 +143,97 @@
   transform: translateY(2px);
   box-shadow: 0 2px 0 #9e1116;
 }
+
+.setup-start:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.setup-note {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.code-input {
+  font-size: 24px !important;
+  font-weight: 900;
+  letter-spacing: 8px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* --- lobby --- */
+
+.lobby-title {
+  margin: 0;
+  text-align: center;
+  font-size: 16px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.room-code {
+  text-align: center;
+  font-size: 44px;
+  font-weight: 900;
+  letter-spacing: 12px;
+  color: #ffce00;
+  text-shadow: 2px 2px 0 #eb1c24;
+  user-select: text;
+}
+
+.lobby-roster {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lobby-roster li {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 16px;
+}
+
+.lobby-roster .lobby-offline {
+  opacity: 0.5;
+}
+
+.lobby-leave {
+  align-self: center;
+}
+
+.net-banner {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  background: #1d2b22;
+  border: 1px solid rgba(255, 206, 0, 0.5);
+  border-top: none;
+  border-radius: 0 0 14px 14px;
+  padding: 10px 18px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.offline-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+}

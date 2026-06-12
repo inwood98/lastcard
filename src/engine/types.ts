@@ -37,6 +37,8 @@ export interface PlayerState {
   hand: Card[]
   /** true once UNO has been called for the current 1-card hand */
   calledUno: boolean
+  /** set on redacted views where hand contents are hidden */
+  handCount?: number
 }
 
 export type Phase =
@@ -84,9 +86,16 @@ export type GameAction =
   | { type: 'CATCH_UNO'; callerId: number; targetId: number }
   | { type: 'CHALLENGE'; accept: boolean }
 
+export interface Seat {
+  name: string
+  isHuman: boolean
+}
+
 export interface GameConfig {
-  playerName: string
-  botCount: number
+  /** explicit seating in turn order; when omitted, built from playerName + botCount */
+  seats?: Seat[]
+  playerName?: string
+  botCount?: number
   rules: HouseRules
   seed?: number
 }
