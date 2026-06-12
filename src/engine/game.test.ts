@@ -17,6 +17,7 @@ interface StateOptions {
   currentPlayer?: number
   direction?: 1 | -1
   drawPile?: Card[]
+  scores?: number[]
 }
 
 function makeState(opts: StateOptions): GameState {
@@ -40,7 +41,7 @@ function makeState(opts: StateOptions): GameState {
     winner: null,
     rules: { ...DEFAULT_RULES, ...opts.rules },
     events: [],
-    scores: opts.hands.map(() => 0),
+    scores: opts.scores ?? opts.hands.map(() => 0),
     seed: 42,
   }
 }
@@ -409,5 +410,90 @@ describe('winning', () => {
       seed: 9,
     })
     expect(state.scores).toEqual([120, 45])
+  })
+})
+
+describe('event kinds', () => {
+  it('emits a deal event first when a game starts', () => {
+    const state = initGame({ playerName: 'You', botCount: 2, rules: DEFAULT_RULES, seed: 1 })
+    expect(state.events[0].kind).toBe('deal')
+  })
+
+  it('tags plays with player and card', () => {
+    const c = card('red', 5)
+    const state = makeState({ hands: [[c, card('blue', 7)], [card('green', 2)]], top: card('red', 9) })
+    const next = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: c.id })
+    const e = next.events[next.events.length - 1]
+    expect(e).toMatchObject({ kind: 'play', playerId: 0, cardId: c.id })
+  })
+
+  it('tags draws with player and count', () => {
+    const state = makeState({ hands: [[card('blue', 7)], [card('green', 2)]], top: card('red', 9) })
+    const next = gameReducer(state, { type: 'DRAW_CARD', playerId: 0 })
+    const e = next.events[next.events.length - 1]
+    expect(e.kind).toBe('draw')
+    expect(e.playerId).toBe(0)
+    expect(e.count).toBe(1)
+  })
+
+  it('tags reverse, skip and wild color choices', () => {
+    const rev = card('red', 'reverse')
+    const state = makeState({
+      hands: [[rev, card('blue', 7)], [card('green', 2)], [card('green', 3)]],
+      top: card('red', 9),
+    })
+    const afterRev = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: rev.id })
+    expect(afterRev.events.some((e) => e.kind === 'reverse')).toBe(true)
+
+    const skip = card('red', 'skip')
+    const state2 = makeState({
+      hands: [[skip, card('blue', 7)], [card('green', 2)], [card('green', 3)]],
+      top: card('red', 9),
+    })
+    const afterSkip = gameReducer(state2, { type: 'PLAY_CARD', playerId: 0, cardId: skip.id })
+    const skipEvent = afterSkip.events.find((e) => e.kind === 'skip')
+    expect(skipEvent?.playerId).toBe(1)
+
+    const wild = card(null, 'wild')
+    const state3 = makeState({ hands: [[wild, card('blue', 7)], [card('green', 2)]], top: card('red', 9) })
+    const afterWild = gameReducer(state3, {
+      type: 'PLAY_CARD', playerId: 0, cardId: wild.id, chosenColor: 'green',
+    })
+    const colorEvent = afterWild.events.find((e) => e.kind === 'wildColor')
+    expect(colorEvent).toMatchObject({ playerId: 0, color: 'green' })
+  })
+
+  it('tags penalties and catches', () => {
+    const state = makeState({ hands: [[card('blue', 7)], [card('green', 2)]], top: card('red', 9) })
+    state.pendingDraw = 4
+    const next = gameReducer(state, { type: 'TAKE_PENALTY', playerId: 0 })
+    expect(next.events[next.events.length - 1]).toMatchObject({ kind: 'penalty', playerId: 0, count: 4 })
+
+    const s2 = makeState({ hands: [[card('blue', 7), card('blue', 8)], [card('green', 2)]], top: card('red', 9) })
+    const caught = gameReducer(s2, { type: 'CATCH_UNO', callerId: 0, targetId: 1 })
+    const e = caught.events.find((ev) => ev.kind === 'caught')
+    expect(e).toMatchObject({ playerId: 1, count: 2 })
+  })
+
+  it('distinguishes roundOver from matchOver at the target score', () => {
+    const winning = card('red', 5)
+    const roundState = makeState({ hands: [[winning], [card(null, 'wild4')]], top: card('red', 9) })
+    const round = gameReducer(roundState, { type: 'PLAY_CARD', playerId: 0, cardId: winning.id })
+    expect(round.events[round.events.length - 1].kind).toBe('roundOver')
+
+    const w2 = card('red', 5)
+    const matchState = makeState({
+      hands: [[w2], [card(null, 'wild4')]],
+      top: card('red', 9),
+      scores: [460, 0],
+    })
+    const match = gameReducer(matchState, { type: 'PLAY_CARD', playerId: 0, cardId: w2.id })
+    expect(match.events[match.events.length - 1].kind).toBe('matchOver')
+  })
+
+  it('tags uno calls', () => {
+    const state = makeState({ hands: [[card('blue', 7)], [card('green', 2)]], top: card('red', 9) })
+    const next = gameReducer(state, { type: 'CALL_UNO', playerId: 0 })
+    expect(next.events[next.events.length - 1]).toMatchObject({ kind: 'uno', playerId: 0 })
   })
 })

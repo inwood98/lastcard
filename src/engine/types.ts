@@ -47,9 +47,34 @@ export type Phase =
   | 'challenge'
   | 'roundOver'
 
+export type EventKind =
+  | 'play'        // a card was played
+  | 'draw'        // player drew card(s)
+  | 'skip'        // a player was skipped
+  | 'reverse'     // direction changed
+  | 'wildColor'   // a wild color was chosen
+  | 'uno'         // "Last card!" called
+  | 'caught'      // caught without calling last card
+  | 'penalty'     // accumulated draw penalty taken
+  | 'challenge'   // wild-draw-four challenge resolved
+  | 'reshuffle'   // discard reshuffled into the draw pile
+  | 'deal'        // round start, hands dealt
+  | 'roundOver'   // round won
+  | 'matchOver'   // match won (target score reached)
+  | 'info'        // narration only, no FX
+
 export interface GameEvent {
   id: number
   text: string
+  kind: EventKind
+  /** acting/affected player: who played, who draws, who won */
+  playerId?: number
+  /** card played, so the UI can animate that exact card */
+  cardId?: number
+  /** number of cards drawn */
+  count?: number
+  /** chosen wild color */
+  color?: Color
 }
 
 export interface GameState {
