@@ -76,7 +76,9 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: Ga
           <div className="player-name">
             {viewer.name}
             <span className="score-chip">{state.scores[viewerId]} pts</span>
-            {viewer.calledUno && handSize(viewer) === 1 && <span className="uno-badge">UNO!</span>}
+            {viewer.calledUno && handSize(viewer) === 1 && (
+              <span className="uno-badge">LAST CARD!</span>
+            )}
             {myTurn && <span className="turn-tag">Your turn</span>}
           </div>
           <UnoControls

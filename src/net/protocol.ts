@@ -36,5 +36,5 @@ export function makeRoomCode(): string {
 }
 
 export function roomPeerId(code: string): string {
-  return `uno-game-${code.toUpperCase()}`
+  return `lastcard-game-${code.toUpperCase()}`
 }

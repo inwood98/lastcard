@@ -27,7 +27,7 @@ export function UnoControls({
     <div className="uno-controls">
       {showUno && (
         <button className="btn btn-uno" onClick={onCallUno}>
-          UNO!
+          LAST CARD!
         </button>
       )}
       {catchable.map((p) => (

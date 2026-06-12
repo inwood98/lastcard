@@ -18,8 +18,8 @@ const RULE_LINES = [
   ['Draw Two', 'Next player draws 2 and is skipped'],
   ['Wild', 'Play on anything; you choose the color'],
   ['Wild Draw Four', 'Choose color; next player draws 4 and is skipped'],
-  ['UNO!', 'Press UNO when you play your second-to-last card — or draw 2 if caught'],
-  ['Catch!', 'Spot someone on one card who forgot UNO and penalize them'],
+  ['Last card!', 'Press LAST CARD when you play your second-to-last card — or draw 2 if caught'],
+  ['Catch!', 'Spot someone on one card who forgot to call it and penalize them'],
   ['Scoring', 'Round winner collects opponents\' cards: face value, actions 20, wilds 50. First to 500 wins the match'],
 ] as const
 

@@ -16,7 +16,7 @@ export function OpponentSeat({ player, score, isCurrent, disconnected }: Opponen
     <div className={isCurrent ? 'seat seat-active' : 'seat'}>
       <div className="seat-name">
         {player.name}
-        {player.calledUno && count === 1 && <span className="uno-badge">UNO!</span>}
+        {player.calledUno && count === 1 && <span className="uno-badge">LAST CARD!</span>}
         {disconnected && <span className="offline-badge">offline</span>}
       </div>
       <div className="seat-cards">

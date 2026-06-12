@@ -177,12 +177,8 @@ function CardBack() {
       <rect x={0} y={0} width={200} height={300} rx={18} fill="#fff" />
       <rect x={8} y={8} width={184} height={284} rx={14} fill="#16161d" />
       <ellipse cx={100} cy={150} rx={88} ry={132} transform="rotate(32 100 150)" fill={CARD_COLORS.red} />
-      <text
-        x={100}
-        y={150}
+      <g
         textAnchor="middle"
-        dominantBaseline="central"
-        fontSize={64}
         fontStyle="italic"
         fontWeight={900}
         fontFamily="'Arial Black', Arial, sans-serif"
@@ -192,8 +188,13 @@ function CardBack() {
         paintOrder="stroke"
         transform="rotate(-12 100 150)"
       >
-        UNO
-      </text>
+        <text x={100} y={138} fontSize={42} dominantBaseline="central">
+          LAST
+        </text>
+        <text x={100} y={180} fontSize={42} dominantBaseline="central">
+          CARD!
+        </text>
+      </g>
     </svg>
   )
 }

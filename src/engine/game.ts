@@ -225,7 +225,7 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       addEvent(state, `${player.name} plays ${label}`)
 
       if (player.hand.length === 1 && player.calledUno) {
-        addEvent(state, `${player.name} calls UNO!`)
+        addEvent(state, `${player.name} calls "Last card!"`)
       }
       if (player.hand.length === 0) {
         // Round ends immediately, but a final Draw card still hits the next player
@@ -368,7 +368,7 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       const player = state.players[action.playerId]
       if (player.hand.length > 2 || player.calledUno || state.winner !== null) return prev
       player.calledUno = true
-      if (player.hand.length === 1) addEvent(state, `${player.name} calls UNO!`)
+      if (player.hand.length === 1) addEvent(state, `${player.name} calls "Last card!"`)
       return state
     }
 
@@ -384,7 +384,7 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       }
       addEvent(
         state,
-        `${name(state, action.callerId)} catches ${target.name} not calling UNO — draw 2!`,
+        `${name(state, action.callerId)} catches ${target.name} not calling "Last card" — draw 2!`,
       )
       drawCards(state, action.targetId, 2)
       return state

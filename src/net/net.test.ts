@@ -84,14 +84,17 @@ describe('starting a game', () => {
     host.startGame()
     await tick()
     expect(host.state!.players.map((p) => p.name)).toEqual(['Gary', 'Amy', 'Ben', 'Maya'])
+    // a flipped Skip/Draw Two acts on seat 0, so compare against the authoritative
+    // state rather than assuming everyone holds exactly 7 cards
+    const truth = host.state!.players.map((p) => p.hand.map((c) => c.id))
     for (const [i, guest] of guests.entries()) {
       expect(guest.status).toBe('playing')
       expect(guest.seatId).toBe(i + 1)
       const view = guest.view!
-      expect(view.players[guest.seatId].hand).toHaveLength(7)
+      expect(view.players[guest.seatId].hand.map((c) => c.id)).toEqual(truth[guest.seatId])
       for (const p of view.players) {
         if (p.id !== guest.seatId) expect(p.hand).toHaveLength(0)
-        expect(handSize(p)).toBe(7)
+        expect(handSize(p)).toBe(truth[p.id].length)
       }
       expect(view.drawPile).toHaveLength(0)
       expect(view.seed).toBe(0)

@@ -59,7 +59,7 @@ export function SetupScreen({ initial, initialJoinCode, onStart }: SetupScreenPr
     <div className="setup-screen">
       <div className="setup-logo">
         <Card faceDown size="lg" />
-        <h1>UNO</h1>
+        <h1>LAST CARD!</h1>
       </div>
 
       <div className="setup-panel">

@@ -33,7 +33,7 @@ export function Lobby({
   const share = async () => {
     try {
       if (navigator.share) {
-        await navigator.share({ title: 'Join my UNO game', url: inviteUrl })
+        await navigator.share({ title: 'Join my Last Card! game', url: inviteUrl })
         return
       }
       await navigator.clipboard.writeText(inviteUrl)
