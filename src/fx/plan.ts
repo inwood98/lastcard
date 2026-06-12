@@ -53,8 +53,9 @@ export function cueForEvent(e: GameEvent, state: GameState, viewerId: number): F
       delayMs: i * FLIGHT_STAGGER_MS,
     }))
 
-  // No `default` case on purpose: events from older peers may arrive with a
-  // missing or unknown `kind` at runtime, and must yield an empty cue.
+  // Switch handles all EventKind cases. The default catches unknown kinds from
+  // older peers, allowing safe downgrade tolerance at runtime. The exhaustiveness
+  // check in the default case will fail to compile if a new EventKind is added.
   switch (e.kind) {
     case 'play': {
       cue.sounds.push('play')
@@ -124,7 +125,10 @@ export function cueForEvent(e: GameEvent, state: GameState, viewerId: number): F
       cue.sounds.push('bigFanfare')
       cue.confetti = true
       break
-    case 'info':
+    // 'info' is no-FX; unknown kinds from older peers also land here safely.
+    // The satisfies check fails to compile if a new EventKind goes unhandled.
+    default:
+      void (e.kind satisfies 'info')
       break
   }
   return cue
