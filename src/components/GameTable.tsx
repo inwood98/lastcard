@@ -1,5 +1,8 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { handSize } from '../net/redact'
+import { FxOverlay } from '../fx/FxOverlay'
+import { useGameFx } from '../fx/useGameFx'
+import { loadFxPrefs, saveFxPrefs, type FxPrefs } from '../storage'
 import type { GameApi } from '../hooks/useGame'
 import { ColorPicker } from './ColorPicker'
 import { GameMenu } from './GameMenu'
@@ -23,6 +26,12 @@ interface GameTableProps {
 
 export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: GameTableProps) {
   const { state, viewerId } = game
+  const [fxPrefs, setFxPrefs] = useState<FxPrefs>(loadFxPrefs)
+  const { fx, onFlightDone } = useGameFx(state, viewerId, fxPrefs)
+  const updateFxPrefs = (prefs: FxPrefs) => {
+    setFxPrefs(prefs)
+    saveFxPrefs(prefs)
+  }
   const viewer = state.players[viewerId]
   const others = [
     ...state.players.slice(viewerId + 1),
@@ -47,7 +56,16 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: Ga
         onRestart={onPlayAgain}
         onLeave={onLeave}
         isHostOrLocal={!!onPlayAgain}
+        fxPrefs={fxPrefs}
+        onFxPrefs={updateFxPrefs}
       />
+      <button
+        className="menu-fab mute-fab"
+        aria-label={fxPrefs.sound ? 'Mute sounds' : 'Unmute sounds'}
+        onClick={() => updateFxPrefs({ ...fxPrefs, sound: !fxPrefs.sound })}
+      >
+        {fxPrefs.sound ? '🔊' : '🔇'}
+      </button>
       <div className="table-top">
         {others.map((p) => (
           <OpponentSeat
@@ -125,6 +143,8 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: Ga
           onLeave={onLeave}
         />
       )}
+
+      <FxOverlay fx={fx} onFlightDone={onFlightDone} />
     </div>
   )
 }
