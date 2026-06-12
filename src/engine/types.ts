@@ -72,9 +72,14 @@ export interface GameState {
   winner: number | null
   rules: HouseRules
   events: GameEvent[]
+  /** match points per seat, including the just-finished round once won */
+  scores: number[]
   /** PRNG state for reshuffles */
   seed: number
 }
+
+/** First player to reach this many points wins the match */
+export const TARGET_SCORE = 500
 
 export type GameAction =
   | { type: 'PLAY_CARD'; playerId: number; cardId: number; chosenColor?: Color }
@@ -97,5 +102,7 @@ export interface GameConfig {
   playerName?: string
   botCount?: number
   rules: HouseRules
+  /** carried-over match scores when starting the next round */
+  scores?: number[]
   seed?: number
 }

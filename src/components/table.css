@@ -313,6 +313,107 @@
   transform: scale(1.1);
 }
 
+/* --- in-game menu --- */
+
+.menu-fab {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 15;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  transition: background 0.15s;
+}
+
+.menu-fab:hover {
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.menu-modal {
+  min-width: min(340px, 85vw);
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.menu-buttons .btn {
+  width: 100%;
+}
+
+.btn-danger {
+  background: #9e1116;
+}
+
+.btn-danger:hover {
+  background: #c2161d;
+}
+
+.rules-list {
+  text-align: left;
+  margin: 0 0 14px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.9);
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+/* --- scores --- */
+
+.score-chip {
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.scoreboard {
+  margin: 14px auto 4px;
+  border-collapse: collapse;
+  min-width: 220px;
+}
+
+.scoreboard td {
+  padding: 6px 16px;
+  font-size: 15px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scoreboard td:first-child {
+  text-align: left;
+}
+
+.scoreboard td:last-child {
+  text-align: right;
+  font-weight: 700;
+}
+
+.scoreboard .score-winner td {
+  color: #ffce00;
+  font-weight: 900;
+}
+
+.invite-btn {
+  align-self: center;
+}
+
 /* --- mobile --- */
 
 @media (max-width: 700px) {

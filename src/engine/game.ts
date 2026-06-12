@@ -9,6 +9,12 @@ import type {
 } from './types'
 
 export const BOT_NAMES = ['Maya', 'Leo', 'Zara', 'Finn', 'Ivy']
+
+/** Official card values: number cards face value, actions 20, wilds 50 */
+export function cardPoints(card: Card): number {
+  if (typeof card.value === 'number') return card.value
+  return card.value === 'wild' || card.value === 'wild4' ? 50 : 20
+}
 const HAND_SIZE = 7
 const MAX_EVENTS = 30
 
@@ -62,6 +68,7 @@ export function initGame(config: GameConfig): GameState {
     winner: null,
     rules: config.rules,
     events: [],
+    scores: config.scores ?? seats.map(() => 0),
     seed,
   }
 
@@ -233,7 +240,12 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
         }
         state.pendingDraw = 0
         state.phase = 'roundOver'
-        addEvent(state, `${player.name} wins!`)
+        const points = state.players.reduce(
+          (sum, p) => sum + p.hand.reduce((s, c) => s + cardPoints(c), 0),
+          0,
+        )
+        state.scores[playerId] += points
+        addEvent(state, `${player.name} wins the round and scores ${points} points!`)
         return state
       }
 

@@ -1,20 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { GameTable } from './components/GameTable'
 import { Lobby } from './components/Lobby'
 import { SetupScreen, type SetupResult } from './components/SetupScreen'
-import { DEFAULT_RULES } from './engine/types'
 import { useGame, type GameSettings } from './hooks/useGame'
 import { useGuestGame } from './hooks/useGuestGame'
 import { useHostGame } from './hooks/useHostGame'
 import { MAX_PLAYERS } from './net/protocol'
+import { loadSettings, saveSettings } from './storage'
 import './App.css'
-
-const DEFAULT_SETTINGS: GameSettings = {
-  playerName: '',
-  botCount: 3,
-  difficulty: 'medium',
-  rules: DEFAULT_RULES,
-}
 
 type Screen =
   | { kind: 'menu' }
@@ -24,52 +17,83 @@ type Screen =
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'menu' })
-  const [lastSettings, setLastSettings] = useState(DEFAULT_SETTINGS)
+  const [lastSettings, setLastSettings] = useState(loadSettings)
   const [gameKey, setGameKey] = useState(0)
+  // arriving via an invite link (…/uno/?join=CODE) opens the join screen pre-filled
+  const [inviteCode] = useState(() => new URLSearchParams(location.search).get('join'))
   const toMenu = () => setScreen({ kind: 'menu' })
 
+  useEffect(() => {
+    if (inviteCode) history.replaceState(null, '', location.pathname)
+  }, [inviteCode])
+
   const handleStart = (result: SetupResult) => {
+    setGameKey((k) => k + 1)
     if (result.mode === 'join') {
+      const updated = { ...lastSettings, playerName: result.name }
+      setLastSettings(updated)
+      saveSettings(updated)
       setScreen({ kind: 'guest', name: result.name, code: result.code })
       return
     }
     setLastSettings(result.settings)
-    setGameKey((k) => k + 1)
+    saveSettings(result.settings)
     setScreen({ kind: result.mode, settings: result.settings })
   }
 
   switch (screen.kind) {
     case 'menu':
-      return <SetupScreen initial={lastSettings} onStart={handleStart} />
+      return <SetupScreen initial={lastSettings} initialJoinCode={inviteCode} onStart={handleStart} />
     case 'single':
-      return (
-        <LocalGame
-          key={gameKey}
-          settings={screen.settings}
-          onPlayAgain={() => setGameKey((k) => k + 1)}
-          onLeave={toMenu}
-        />
-      )
+      return <LocalGame key={gameKey} settings={screen.settings} onLeave={toMenu} />
     case 'host':
       return <HostScreen key={gameKey} settings={screen.settings} onLeave={toMenu} />
     case 'guest':
-      return (
-        <GuestScreen key={gameKey} name={screen.name} code={screen.code} onLeave={toMenu} />
-      )
+      return <GuestScreen key={gameKey} name={screen.name} code={screen.code} onLeave={toMenu} />
   }
 }
 
-function LocalGame({
+/** Single-player match: rounds carry scores until someone reaches the target */
+function LocalGame({ settings, onLeave }: { settings: GameSettings; onLeave: () => void }) {
+  const [round, setRound] = useState(0)
+  const [scores, setScores] = useState<number[] | undefined>(undefined)
+  return (
+    <LocalRound
+      key={round}
+      settings={{ ...settings, scores }}
+      onNextRound={(s) => {
+        setScores(s)
+        setRound((r) => r + 1)
+      }}
+      onNewMatch={() => {
+        setScores(undefined)
+        setRound((r) => r + 1)
+      }}
+      onLeave={onLeave}
+    />
+  )
+}
+
+function LocalRound({
   settings,
-  onPlayAgain,
+  onNextRound,
+  onNewMatch,
   onLeave,
 }: {
   settings: GameSettings
-  onPlayAgain: () => void
+  onNextRound: (scores: number[]) => void
+  onNewMatch: () => void
   onLeave: () => void
 }) {
   const game = useGame(settings)
-  return <GameTable game={game} onPlayAgain={onPlayAgain} onLeave={onLeave} />
+  return (
+    <GameTable
+      game={game}
+      onPlayAgain={() => onNextRound(game.state.scores)}
+      onNewMatch={onNewMatch}
+      onLeave={onLeave}
+    />
+  )
 }
 
 function Message({ title, body, onLeave }: { title: string; body?: string; onLeave: () => void }) {
@@ -110,6 +134,7 @@ function HostScreen({ settings, onLeave }: { settings: GameSettings; onLeave: ()
         maxBots={MAX_PLAYERS - (session?.humanCount() ?? 1)}
         onBotCount={(n) => session?.configure({ botCount: n })}
         onLeave={onLeave}
+        showInvite
         statusText={
           host.status === 'opening'
             ? 'Opening the room…'
@@ -140,6 +165,7 @@ function HostScreen({ settings, onLeave }: { settings: GameSettings; onLeave: ()
     <GameTable
       game={host.api}
       onPlayAgain={() => session.restart()}
+      onNewMatch={() => session.restart(true)}
       onLeave={onLeave}
       banner={banner}
     />
@@ -181,6 +207,7 @@ function GuestScreen({
         code={code}
         roster={guest.session?.roster ?? []}
         onLeave={onLeave}
+        showInvite
         statusText="Waiting for the host to start the game…"
       />
     )

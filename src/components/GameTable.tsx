@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { handSize } from '../net/redact'
 import type { GameApi } from '../hooks/useGame'
 import { ColorPicker } from './ColorPicker'
+import { GameMenu } from './GameMenu'
 import { Hand } from './Hand'
 import { OpponentSeat } from './OpponentSeat'
 import { PilesArea } from './PilesArea'
@@ -13,12 +14,14 @@ interface GameTableProps {
   game: GameApi
   /** undefined = this player can't restart (guest) — win screen says to ask the host */
   onPlayAgain?: () => void
+  /** start a fresh match with scores reset (host/local only) */
+  onNewMatch?: () => void
   onLeave: () => void
   /** extra host-only UI such as disconnect banners */
   banner?: ReactNode
 }
 
-export function GameTable({ game, onPlayAgain, onLeave, banner }: GameTableProps) {
+export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: GameTableProps) {
   const { state, viewerId } = game
   const viewer = state.players[viewerId]
   const others = [
@@ -39,11 +42,18 @@ export function GameTable({ game, onPlayAgain, onLeave, banner }: GameTableProps
   return (
     <div className="table">
       {banner}
+      <GameMenu
+        rules={state.rules}
+        onRestart={onPlayAgain}
+        onLeave={onLeave}
+        isHostOrLocal={!!onPlayAgain}
+      />
       <div className="table-top">
         {others.map((p) => (
           <OpponentSeat
             key={p.id}
             player={p}
+            score={state.scores[p.id]}
             isCurrent={state.currentPlayer === p.id && state.phase !== 'roundOver'}
           />
         ))}
@@ -65,6 +75,7 @@ export function GameTable({ game, onPlayAgain, onLeave, banner }: GameTableProps
         <div className="bottom-bar">
           <div className="player-name">
             {viewer.name}
+            <span className="score-chip">{state.scores[viewerId]} pts</span>
             {viewer.calledUno && handSize(viewer) === 1 && <span className="uno-badge">UNO!</span>}
             {myTurn && <span className="turn-tag">Your turn</span>}
           </div>
@@ -104,7 +115,13 @@ export function GameTable({ game, onPlayAgain, onLeave, banner }: GameTableProps
       )}
 
       {state.phase === 'roundOver' && (
-        <WinScreen state={state} viewerId={viewerId} onPlayAgain={onPlayAgain} onLeave={onLeave} />
+        <WinScreen
+          state={state}
+          viewerId={viewerId}
+          onPlayAgain={onPlayAgain}
+          onNewMatch={onNewMatch}
+          onLeave={onLeave}
+        />
       )}
     </div>
   )

@@ -40,6 +40,7 @@ function makeState(opts: StateOptions): GameState {
     winner: null,
     rules: { ...DEFAULT_RULES, ...opts.rules },
     events: [],
+    scores: opts.hands.map(() => 0),
     seed: 42,
   }
 }
@@ -381,5 +382,32 @@ describe('winning', () => {
     const next = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: c.id })
     expect(next.winner).toBe(0)
     expect(next.players[1].hand).toHaveLength(3)
+  })
+
+  it('the round winner scores the value of opponents\' remaining cards', () => {
+    const c = card('red', 3)
+    const state = makeState({
+      hands: [
+        [c],
+        [card('green', 9), card('green', 'skip')], // 9 + 20
+        [card(null, 'wild'), card('blue', 4)], // 50 + 4
+      ],
+      top: card('red', 5),
+    })
+    const next = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: c.id })
+    expect(next.scores).toEqual([83, 0, 0])
+  })
+
+  it('scores carry over to the next round via config', () => {
+    const state = initGame({
+      seats: [
+        { name: 'A', isHuman: true },
+        { name: 'B', isHuman: true },
+      ],
+      rules: DEFAULT_RULES,
+      scores: [120, 45],
+      seed: 9,
+    })
+    expect(state.scores).toEqual([120, 45])
   })
 })

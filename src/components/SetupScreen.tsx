@@ -11,6 +11,8 @@ export type SetupResult =
 
 interface SetupScreenProps {
   initial: GameSettings
+  /** room code from an invite link — opens straight onto the join form */
+  initialJoinCode?: string | null
   onStart: (result: SetupResult) => void
 }
 
@@ -28,10 +30,10 @@ const MODES = [
 
 type Mode = (typeof MODES)[number]['value']
 
-export function SetupScreen({ initial, onStart }: SetupScreenProps) {
-  const [mode, setMode] = useState<Mode>('single')
+export function SetupScreen({ initial, initialJoinCode, onStart }: SetupScreenProps) {
+  const [mode, setMode] = useState<Mode>(initialJoinCode ? 'join' : 'single')
   const [name, setName] = useState(initial.playerName)
-  const [code, setCode] = useState('')
+  const [code, setCode] = useState(initialJoinCode?.toUpperCase() ?? '')
   const [botCount, setBotCount] = useState(initial.botCount)
   const [difficulty, setDifficulty] = useState<Difficulty>(initial.difficulty)
   const [rules, setRules] = useState<HouseRules>(initial.rules)

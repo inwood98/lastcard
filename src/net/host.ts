@@ -123,11 +123,15 @@ export class HostSession {
     this.onChange()
   }
 
-  /** "Play again" — same table, fresh deal */
-  restart() {
+  /** Next round (scores carry over) or a fresh match (scores reset) */
+  restart(resetScores = false) {
     if (this.phase !== 'playing' || !this.state) return
     const seats: Seat[] = this.state.players.map((p) => ({ name: p.name, isHuman: p.isHuman }))
-    this.state = initGame({ seats, rules: this.config.rules })
+    this.state = initGame({
+      seats,
+      rules: this.config.rules,
+      scores: resetScores ? undefined : this.state.scores,
+    })
     this.driver?.stop()
     this.driver = new BotDriver(this.config.difficulty, (a) => this.dispatch(a))
     const roster = this.roster()

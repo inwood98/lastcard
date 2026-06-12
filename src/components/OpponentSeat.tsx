@@ -4,11 +4,12 @@ import { Card } from './Card'
 
 interface OpponentSeatProps {
   player: PlayerState
+  score: number
   isCurrent: boolean
   disconnected?: boolean
 }
 
-export function OpponentSeat({ player, isCurrent, disconnected }: OpponentSeatProps) {
+export function OpponentSeat({ player, score, isCurrent, disconnected }: OpponentSeatProps) {
   const count = handSize(player)
   const fanned = Math.min(count, 7)
   return (
@@ -29,7 +30,9 @@ export function OpponentSeat({ player, isCurrent, disconnected }: OpponentSeatPr
           </div>
         ))}
       </div>
-      <div className="seat-count">{count === 1 ? '1 card' : `${count} cards`}</div>
+      <div className="seat-count">
+        {count === 1 ? '1 card' : `${count} cards`} · {score} pts
+      </div>
     </div>
   )
 }

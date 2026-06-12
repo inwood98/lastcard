@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { RosterEntry } from '../net/protocol'
 
 interface LobbyProps {
@@ -10,6 +11,7 @@ interface LobbyProps {
   maxBots?: number
   onBotCount?: (n: number) => void
   onLeave: () => void
+  showInvite?: boolean
   statusText: string
 }
 
@@ -22,13 +24,35 @@ export function Lobby({
   maxBots,
   onBotCount,
   onLeave,
+  showInvite,
   statusText,
 }: LobbyProps) {
+  const [copied, setCopied] = useState(false)
+  const inviteUrl = `${location.origin}${location.pathname}?join=${code}`
+
+  const share = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Join my UNO game', url: inviteUrl })
+        return
+      }
+      await navigator.clipboard.writeText(inviteUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // user dismissed the share sheet — nothing to do
+    }
+  }
   return (
     <div className="setup-screen">
       <div className="setup-panel lobby-panel">
         <h2 className="lobby-title">Room code</h2>
         <div className="room-code">{code}</div>
+        {showInvite && (
+          <button className="btn invite-btn" onClick={share}>
+            {copied ? '✓ Link copied!' : '🔗 Share invite link'}
+          </button>
+        )}
         <p className="setup-note">{statusText}</p>
 
         <div className="setup-field">

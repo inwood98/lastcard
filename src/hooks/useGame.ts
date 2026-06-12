@@ -9,6 +9,8 @@ export interface GameSettings {
   botCount: number
   difficulty: Difficulty
   rules: HouseRules
+  /** match scores carried into this round */
+  scores?: number[]
 }
 
 /** Action callbacks shared by local, host, and guest game hooks */
@@ -51,7 +53,8 @@ export function useGame(settings: GameSettings): GameApi {
   const [state, dispatch] = useReducer(
     gameReducer,
     settings,
-    (s: GameSettings) => initGame({ playerName: s.playerName, botCount: s.botCount, rules: s.rules }),
+    (s: GameSettings) =>
+      initGame({ playerName: s.playerName, botCount: s.botCount, rules: s.rules, scores: s.scores }),
   )
 
   const driverRef = useRef<BotDriver | null>(null)
