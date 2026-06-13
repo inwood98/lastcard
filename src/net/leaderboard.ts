@@ -28,7 +28,7 @@ export async function submitResult(result: MatchResult): Promise<void> {
   const { url, anon } = env()
   if (!url || !anon) return
   try {
-    await fetch(`${url}/rest/v1/match_results`, {
+    const res = await fetch(`${url}/rest/v1/match_results`, {
       method: 'POST',
       headers: {
         apikey: anon,
@@ -43,6 +43,7 @@ export async function submitResult(result: MatchResult): Promise<void> {
         mode: 'solo',
       }),
     })
+    if (!res.ok) console.warn('leaderboard: submit failed', res.status)
   } catch (err) {
     console.warn('leaderboard: submit failed', err)
   }

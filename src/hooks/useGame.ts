@@ -94,6 +94,7 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
         void submitResult(result)
       }
     } else {
+      submittedRef.current = false
       saveGame(state, settings.difficulty)
     }
   }, [state, settings.playerName, settings.difficulty])
