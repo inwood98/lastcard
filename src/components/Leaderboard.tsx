@@ -11,13 +11,12 @@ type Status = 'loading' | 'ready' | 'error' | 'disabled'
 
 export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
   const [rows, setRows] = useState<LeaderboardRow[]>([])
-  const [status, setStatus] = useState<Status>('loading')
+  const [status, setStatus] = useState<Status>(() =>
+    isConfigured() ? 'loading' : 'disabled',
+  )
 
   useEffect(() => {
-    if (!isConfigured()) {
-      setStatus('disabled')
-      return
-    }
+    if (status === 'disabled') return
     let live = true
     fetchLeaderboard()
       .then((data) => {
@@ -26,11 +25,13 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
         setRows(sorted)
         setStatus('ready')
       })
-      .catch(() => live && setStatus('error'))
+      .catch(() => {
+        if (live) setStatus('error')
+      })
     return () => {
       live = false
     }
-  }, [])
+  }, [status])
 
   return (
     <div className="overlay">
