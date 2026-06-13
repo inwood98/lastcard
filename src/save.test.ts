@@ -30,6 +30,10 @@ describe('parseSave', () => {
     const bad = { version: SAVE_VERSION, savedAt: 1, difficulty: 'easy', state: { players: 'nope' } }
     expect(parseSave(JSON.stringify(bad))).toBeNull()
   })
+  it('returns null on an unrecognised difficulty', () => {
+    const save = { ...sampleSave(), difficulty: 'insane' }
+    expect(parseSave(JSON.stringify(save))).toBeNull()
+  })
 })
 
 describe('settingsFromSave', () => {

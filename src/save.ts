@@ -10,6 +10,7 @@ export interface SavedGame {
 
 export const SAVE_VERSION = 1
 const SAVE_KEY = 'uno-save'
+const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
 
 /** Pure: parse + validate a raw localStorage string. Returns null on any problem. */
 export function parseSave(raw: string | null): SavedGame | null {
@@ -20,7 +21,7 @@ export function parseSave(raw: string | null): SavedGame | null {
     if (
       !parsed ||
       parsed.version !== SAVE_VERSION ||
-      typeof parsed.difficulty !== 'string' ||
+      !DIFFICULTIES.includes(parsed.difficulty) ||
       !state ||
       !Array.isArray(state.players) ||
       !Array.isArray(state.discardPile) ||
