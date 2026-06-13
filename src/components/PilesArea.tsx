@@ -1,5 +1,6 @@
 import type { GameState } from '../engine/types'
 import { CARD_COLORS, Card } from './Card'
+import { anchorRef } from '../fx/anchors'
 
 interface PilesAreaProps {
   state: GameState
@@ -14,6 +15,7 @@ export function PilesArea({ state, canDraw, canTakePenalty, onDraw }: PilesAreaP
   return (
     <div className="piles">
       <div
+        ref={anchorRef('draw')}
         className={clickable ? 'draw-pile draw-pile-active' : 'draw-pile'}
         onClick={clickable ? onDraw : undefined}
         role="button"
@@ -38,6 +40,7 @@ export function PilesArea({ state, canDraw, canTakePenalty, onDraw }: PilesAreaP
       </div>
 
       <div
+        ref={anchorRef('discard')}
         className="discard-pile"
         style={{ boxShadow: `0 0 26px 6px ${CARD_COLORS[state.currentColor]}66` }}
       >

@@ -34,3 +34,30 @@ export function saveSettings(settings: GameSettings) {
     // storage unavailable (private mode) — settings just won't persist
   }
 }
+
+export interface FxPrefs {
+  sound: boolean
+  animations: boolean
+}
+
+const FX_KEY = 'uno-fx'
+
+export const DEFAULT_FX: FxPrefs = { sound: true, animations: true }
+
+export function loadFxPrefs(): FxPrefs {
+  try {
+    const raw = localStorage.getItem(FX_KEY)
+    if (!raw) return DEFAULT_FX
+    return { ...DEFAULT_FX, ...JSON.parse(raw) }
+  } catch {
+    return DEFAULT_FX
+  }
+}
+
+export function saveFxPrefs(prefs: FxPrefs) {
+  try {
+    localStorage.setItem(FX_KEY, JSON.stringify(prefs))
+  } catch {
+    // storage unavailable (private mode) — prefs just won't persist
+  }
+}

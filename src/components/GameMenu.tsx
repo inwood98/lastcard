@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { HouseRules } from '../engine/types'
+import type { FxPrefs } from '../storage'
 
 interface GameMenuProps {
   rules: HouseRules
@@ -8,6 +9,8 @@ interface GameMenuProps {
   onLeave: () => void
   /** changes wording: ending the game vs leaving someone else's table */
   isHostOrLocal: boolean
+  fxPrefs: FxPrefs
+  onFxPrefs: (prefs: FxPrefs) => void
 }
 
 type View = 'closed' | 'menu' | 'rules' | 'confirmLeave' | 'confirmRestart'
@@ -23,7 +26,7 @@ const RULE_LINES = [
   ['Scoring', 'Round winner collects opponents\' cards: face value, actions 20, wilds 50. First to 500 wins the match'],
 ] as const
 
-export function GameMenu({ rules, onRestart, onLeave, isHostOrLocal }: GameMenuProps) {
+export function GameMenu({ rules, onRestart, onLeave, isHostOrLocal, fxPrefs, onFxPrefs }: GameMenuProps) {
   const [view, setView] = useState<View>('closed')
   const close = () => setView('closed')
 
@@ -45,6 +48,24 @@ export function GameMenu({ rules, onRestart, onLeave, isHostOrLocal }: GameMenuP
             {view === 'menu' && (
               <>
                 <h2>Menu</h2>
+                <div className="fx-toggles">
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={fxPrefs.sound}
+                      onChange={(e) => onFxPrefs({ ...fxPrefs, sound: e.target.checked })}
+                    />
+                    Sound effects
+                  </label>
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={fxPrefs.animations}
+                      onChange={(e) => onFxPrefs({ ...fxPrefs, animations: e.target.checked })}
+                    />
+                    Animations
+                  </label>
+                </div>
                 <div className="menu-buttons">
                   <button className="btn" onClick={close}>
                     Resume

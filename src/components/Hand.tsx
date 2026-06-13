@@ -1,5 +1,6 @@
 import type { Card as CardType } from '../engine/types'
 import { Card } from './Card'
+import { anchorRef } from '../fx/anchors'
 
 interface HandProps {
   cards: CardType[]
@@ -19,7 +20,7 @@ function sortKey(c: CardType): string {
 export function Hand({ cards, legalIds, myTurn, onPlay }: HandProps) {
   const sorted = [...cards].sort((a, b) => sortKey(a).localeCompare(sortKey(b)))
   return (
-    <div className="hand">
+    <div ref={anchorRef('hand')} className="hand">
       {sorted.map((card) => {
         const playable = myTurn && legalIds.has(card.id)
         return (

@@ -446,3 +446,22 @@
     height: 70px;
   }
 }
+
+.mute-fab {
+  right: 62px;
+  font-size: 17px;
+}
+
+.fx-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.fx-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}

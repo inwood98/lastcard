@@ -1,0 +1,82 @@
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 90;
+  overflow: hidden;
+}
+
+.fx-flight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  will-change: transform;
+}
+
+.fx-flight .uno-card {
+  width: 100%;
+  height: 100%;
+}
+
+.fx-flip {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: fx-flip 380ms both;
+}
+
+.fx-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+.fx-front {
+  transform: rotateY(180deg);
+}
+
+@keyframes fx-flip {
+  from { transform: rotateY(0deg); }
+  to { transform: rotateY(180deg); }
+}
+
+.fx-spin {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  color: rgba(255, 255, 255, 0.9);
+  animation: fx-spin 700ms ease-out both;
+}
+
+@keyframes fx-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg) scale(0.4); opacity: 1; }
+  to { transform: translate(-50%, -50%) rotate(360deg) scale(1.8); opacity: 0; }
+}
+
+.fx-flash {
+  position: absolute;
+  inset: 0;
+  animation: fx-flash 600ms ease-out both;
+}
+
+@keyframes fx-flash {
+  from { opacity: 0.55; }
+  to { opacity: 0; }
+}
+
+.fx-confetti {
+  position: absolute;
+  top: -14px;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  animation-name: fx-fall;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+  animation-iteration-count: infinite;
+}
+
+@keyframes fx-fall {
+  to { transform: translateY(105vh) rotate(720deg); }
+}

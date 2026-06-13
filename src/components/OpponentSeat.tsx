@@ -1,6 +1,7 @@
 import type { PlayerState } from '../engine/types'
 import { handSize } from '../net/redact'
 import { Card } from './Card'
+import { anchorRef } from '../fx/anchors'
 
 interface OpponentSeatProps {
   player: PlayerState
@@ -13,7 +14,7 @@ export function OpponentSeat({ player, score, isCurrent, disconnected }: Opponen
   const count = handSize(player)
   const fanned = Math.min(count, 7)
   return (
-    <div className={isCurrent ? 'seat seat-active' : 'seat'}>
+    <div ref={anchorRef(`seat-${player.id}`)} className={isCurrent ? 'seat seat-active' : 'seat'}>
       <div className="seat-name">
         {player.name}
         {player.calledUno && count === 1 && <span className="uno-badge">LAST CARD!</span>}

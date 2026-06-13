@@ -1,11 +1,13 @@
 import { buildDeck, shuffle } from './deck'
 import { isPlayable, legalCards, wild4WasIllegal } from './rules'
-import type {
-  Card,
-  GameAction,
-  GameConfig,
-  GameState,
-  PlayerState,
+import {
+  TARGET_SCORE,
+  type Card,
+  type GameAction,
+  type GameConfig,
+  type GameEvent,
+  type GameState,
+  type PlayerState,
 } from './types'
 
 export const BOT_NAMES = ['Maya', 'Leo', 'Zara', 'Finn', 'Ivy']
@@ -72,15 +74,24 @@ export function initGame(config: GameConfig): GameState {
     seed,
   }
 
+  addEvent(state, '', { kind: 'deal' })
+
   // The flipped card acts on the first player
   if (top.value === 'skip') {
-    addEvent(state, `First card is Skip — ${players[0].name} loses a turn`)
+    addEvent(state, `First card is Skip — ${players[0].name} loses a turn`, {
+      kind: 'skip',
+      playerId: 0,
+    })
     state.currentPlayer = nextIndex(state, 0, 1)
   } else if (top.value === 'reverse' && playerCount > 2) {
-    addEvent(state, 'First card is Reverse — play goes right')
+    addEvent(state, 'First card is Reverse — play goes right', { kind: 'reverse' })
     state.direction = -1
   } else if (top.value === 'draw2') {
-    addEvent(state, `First card is Draw Two — ${players[0].name} draws 2`)
+    addEvent(state, `First card is Draw Two — ${players[0].name} draws 2`, {
+      kind: 'draw',
+      playerId: 0,
+      count: 2,
+    })
     drawCards(state, 0, 2)
     state.currentPlayer = nextIndex(state, 0, 1)
   } else if (top.value === 'wild') {
@@ -90,9 +101,11 @@ export function initGame(config: GameConfig): GameState {
   return state
 }
 
-function addEvent(state: GameState, text: string) {
+type EventFx = Partial<Omit<GameEvent, 'id' | 'text'>>
+
+function addEvent(state: GameState, text: string, fx: EventFx = {}) {
   const id = state.events.length ? state.events[state.events.length - 1].id + 1 : 1
-  state.events.push({ id, text })
+  state.events.push({ id, text, kind: 'info', ...fx })
   if (state.events.length > MAX_EVENTS) state.events.shift()
 }
 
@@ -118,7 +131,7 @@ function drawCards(state: GameState, playerId: number, n: number): Card[] {
       state.seed = reshuffled.seed
       state.drawPile = reshuffled.cards
       state.discardPile = [top]
-      addEvent(state, 'Draw pile reshuffled')
+      addEvent(state, 'Draw pile reshuffled', { kind: 'reshuffle' })
     }
     const card = state.drawPile.pop()!
     player.hand.push(card)
@@ -146,7 +159,11 @@ function resolveWild4(state: GameState, offenderId: number) {
   }
   const victim = nextIndex(state, offenderId, 1)
   drawCards(state, victim, 4)
-  addEvent(state, `${name(state, victim)} draws 4 and is skipped`)
+  addEvent(state, `${name(state, victim)} draws 4 and is skipped`, {
+    kind: 'draw',
+    playerId: victim,
+    count: 4,
+  })
   state.currentPlayer = nextIndex(state, offenderId, 2)
   state.drawnCardId = null
 }
@@ -156,14 +173,14 @@ function applyEffect(state: GameState, card: Card, playerId: number) {
   switch (card.value) {
     case 'skip': {
       const skipped = nextIndex(state, playerId, 1)
-      addEvent(state, `${name(state, skipped)} is skipped`)
+      addEvent(state, `${name(state, skipped)} is skipped`, { kind: 'skip', playerId: skipped })
       state.currentPlayer = nextIndex(state, playerId, 2)
       state.drawnCardId = null
       break
     }
     case 'reverse': {
       state.direction = state.direction === 1 ? -1 : 1
-      addEvent(state, 'Direction reversed')
+      addEvent(state, 'Direction reversed', { kind: 'reverse' })
       if (state.players.length === 2) {
         // Reverse acts as Skip in a two-player game: same player goes again
         state.drawnCardId = null
@@ -179,7 +196,11 @@ function applyEffect(state: GameState, card: Card, playerId: number) {
       } else {
         const victim = nextIndex(state, playerId, 1)
         drawCards(state, victim, 2)
-        addEvent(state, `${name(state, victim)} draws 2 and is skipped`)
+        addEvent(state, `${name(state, victim)} draws 2 and is skipped`, {
+          kind: 'draw',
+          playerId: victim,
+          count: 2,
+        })
         state.currentPlayer = nextIndex(state, playerId, 2)
         state.drawnCardId = null
       }
@@ -222,10 +243,10 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       }
 
       const label = cardLabel(card)
-      addEvent(state, `${player.name} plays ${label}`)
+      addEvent(state, `${player.name} plays ${label}`, { kind: 'play', playerId, cardId })
 
       if (player.hand.length === 1 && player.calledUno) {
-        addEvent(state, `${player.name} calls "Last card!"`)
+        addEvent(state, `${player.name} calls "Last card!"`, { kind: 'uno', playerId })
       }
       if (player.hand.length === 0) {
         // Round ends immediately, but a final Draw card still hits the next player
@@ -245,7 +266,10 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
           0,
         )
         state.scores[playerId] += points
-        addEvent(state, `${player.name} wins the round and scores ${points} points!`)
+        addEvent(state, `${player.name} wins the round and scores ${points} points!`, {
+          kind: state.scores[playerId] >= TARGET_SCORE ? 'matchOver' : 'roundOver',
+          playerId,
+        })
         return state
       }
 
@@ -255,7 +279,11 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       }
       if (isWild && chosenColor) {
         state.currentColor = chosenColor
-        addEvent(state, `${player.name} chooses ${chosenColor}`)
+        addEvent(state, `${player.name} chooses ${chosenColor}`, {
+          kind: 'wildColor',
+          playerId,
+          color: chosenColor,
+        })
       } else {
         state.currentColor = card.color!
       }
@@ -268,7 +296,11 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       state.currentColor = action.color
       state.phase = 'play'
       const top = state.discardPile[state.discardPile.length - 1]
-      addEvent(state, `${name(state, state.currentPlayer)} chooses ${action.color}`)
+      addEvent(state, `${name(state, state.currentPlayer)} chooses ${action.color}`, {
+        kind: 'wildColor',
+        playerId: state.currentPlayer,
+        color: action.color,
+      })
       // A wild flipped as the starting card has no further effect
       if (top.value === 'wild' && state.discardPile.length === 1) return state
       applyEffect(state, top, state.currentPlayer)
@@ -287,13 +319,18 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
         addEvent(
           state,
           `Challenge succeeds — ${name(state, playerId)} had a ${prevColor} card and draws 4`,
+          { kind: 'challenge', playerId, count: 4 },
         )
         drawCards(state, playerId, 4)
         state.pendingWild4 = null
         state.currentPlayer = targetId
         state.drawnCardId = null
       } else {
-        addEvent(state, `Challenge fails — ${name(state, targetId)} draws 6 and is skipped`)
+        addEvent(state, `Challenge fails — ${name(state, targetId)} draws 6 and is skipped`, {
+          kind: 'challenge',
+          playerId: targetId,
+          count: 6,
+        })
         drawCards(state, targetId, 6)
         state.pendingWild4 = null
         state.currentPlayer = nextIndex(state, playerId, 2)
@@ -325,7 +362,11 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
           count += drawn.length
         }
       }
-      addEvent(state, `${player.name} draws ${count === 1 ? 'a card' : `${count} cards`}`)
+      addEvent(state, `${player.name} draws ${count === 1 ? 'a card' : `${count} cards`}`, {
+        kind: 'draw',
+        playerId: action.playerId,
+        count,
+      })
       const last = drawn[drawn.length - 1]
       if (last && isPlayable(last, top, state.currentColor)) {
         state.drawnCardId = last.id
@@ -359,7 +400,11 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       const n = state.pendingDraw
       state.pendingDraw = 0
       drawCards(state, action.playerId, n)
-      addEvent(state, `${name(state, action.playerId)} draws ${n} and is skipped`)
+      addEvent(state, `${name(state, action.playerId)} draws ${n} and is skipped`, {
+        kind: 'penalty',
+        playerId: action.playerId,
+        count: n,
+      })
       advanceTurn(state, 1)
       return state
     }
@@ -368,7 +413,12 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       const player = state.players[action.playerId]
       if (player.hand.length > 2 || player.calledUno || state.winner !== null) return prev
       player.calledUno = true
-      if (player.hand.length === 1) addEvent(state, `${player.name} calls "Last card!"`)
+      if (player.hand.length === 1) {
+        addEvent(state, `${player.name} calls "Last card!"`, {
+          kind: 'uno',
+          playerId: action.playerId,
+        })
+      }
       return state
     }
 
@@ -385,6 +435,7 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       addEvent(
         state,
         `${name(state, action.callerId)} catches ${target.name} not calling "Last card" — draw 2!`,
+        { kind: 'caught', playerId: action.targetId, count: 2 },
       )
       drawCards(state, action.targetId, 2)
       return state
