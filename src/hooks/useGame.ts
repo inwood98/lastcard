@@ -3,6 +3,8 @@ import { BotDriver } from '../ai/botDriver'
 import { gameReducer, initGame } from '../engine/game'
 import { legalCards } from '../engine/rules'
 import type { Color, Difficulty, GameAction, GameState, HouseRules } from '../engine/types'
+import { TARGET_SCORE } from '../engine/types'
+import { clearSavedGame, saveGame } from '../save'
 
 export interface GameSettings {
   playerName: string
@@ -48,13 +50,25 @@ export function makeApi(
   }
 }
 
-/** Single-player game: local reducer + bot driver, human in seat 0 */
-export function useGame(settings: GameSettings): GameApi {
+/**
+ * Single-player game: local reducer + bot driver, human in seat 0.
+ * When `initialState` is supplied (resuming a saved game) the reducer starts
+ * from it; otherwise a fresh game is dealt. Every state change is auto-saved,
+ * except a completed match, which clears the save instead.
+ */
+export function useGame(settings: GameSettings, initialState?: GameState): GameApi {
   const [state, dispatch] = useReducer(
     gameReducer,
-    settings,
-    (s: GameSettings) =>
-      initGame({ playerName: s.playerName, botCount: s.botCount, rules: s.rules, scores: s.scores }),
+    { settings, initialState },
+    ({ settings, initialState }: { settings: GameSettings; initialState?: GameState }) =>
+      initialState
+        ? structuredClone(initialState)
+        : initGame({
+            playerName: settings.playerName,
+            botCount: settings.botCount,
+            rules: settings.rules,
+            scores: settings.scores,
+          }),
   )
 
   const driverRef = useRef<BotDriver | null>(null)
@@ -69,6 +83,12 @@ export function useGame(settings: GameSettings): GameApi {
   useEffect(() => {
     driverRef.current?.onState(state)
   }, [state])
+
+  useEffect(() => {
+    const matchOver = state.phase === 'roundOver' && state.scores.some((s) => s >= TARGET_SCORE)
+    if (matchOver) clearSavedGame()
+    else saveGame(state, settings.difficulty)
+  }, [state, settings.difficulty])
 
   return useMemo(() => makeApi(state, 0, dispatch), [state])
 }

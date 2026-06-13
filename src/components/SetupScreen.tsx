@@ -8,11 +8,14 @@ export type SetupResult =
   | { mode: 'single'; settings: GameSettings }
   | { mode: 'host'; settings: GameSettings }
   | { mode: 'join'; name: string; code: string }
+  | { mode: 'resume' }
 
 interface SetupScreenProps {
   initial: GameSettings
   /** room code from an invite link — opens straight onto the join form */
   initialJoinCode?: string | null
+  /** one-line summary of an unfinished solo game, or null if there is none */
+  savedSummary?: string | null
   onStart: (result: SetupResult) => void
 }
 
@@ -30,8 +33,9 @@ const MODES = [
 
 type Mode = (typeof MODES)[number]['value']
 
-export function SetupScreen({ initial, initialJoinCode, onStart }: SetupScreenProps) {
+export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }: SetupScreenProps) {
   const [mode, setMode] = useState<Mode>(initialJoinCode ? 'join' : 'single')
+  const [confirmNew, setConfirmNew] = useState(false)
   const [name, setName] = useState(initial.playerName)
   const [code, setCode] = useState(initialJoinCode?.toUpperCase() ?? '')
   const [botCount, setBotCount] = useState(initial.botCount)
@@ -52,6 +56,10 @@ export function SetupScreen({ initial, initialJoinCode, onStart }: SetupScreenPr
       }
       return
     }
+    if (mode === 'single' && savedSummary && !confirmNew) {
+      setConfirmNew(true)
+      return
+    }
     onStart({ mode, settings })
   }
 
@@ -63,13 +71,22 @@ export function SetupScreen({ initial, initialJoinCode, onStart }: SetupScreenPr
       </div>
 
       <div className="setup-panel">
+        {savedSummary && (
+          <button className="setup-resume" onClick={() => onStart({ mode: 'resume' })}>
+            <span className="setup-resume-title">Resume game</span>
+            <span className="setup-resume-sub">{savedSummary}</span>
+          </button>
+        )}
         <div className="setup-field">
           <div className="setup-options">
             {MODES.map((m) => (
               <button
                 key={m.value}
                 className={m.value === mode ? 'option selected' : 'option'}
-                onClick={() => setMode(m.value)}
+                onClick={() => {
+                  setMode(m.value)
+                  setConfirmNew(false)
+                }}
               >
                 {m.label}
               </button>
@@ -183,9 +200,29 @@ export function SetupScreen({ initial, initialJoinCode, onStart }: SetupScreenPr
           </p>
         )}
 
-        <button className="setup-start" onClick={submit}>
-          {mode === 'single' ? 'Deal me in' : mode === 'host' ? 'Open the room' : 'Join game'}
-        </button>
+        {confirmNew ? (
+          <div className="setup-confirm">
+            <p>Abandon your game in progress?</p>
+            <div className="setup-confirm-buttons">
+              <button
+                className="setup-start"
+                onClick={() => {
+                  setConfirmNew(false)
+                  if (mode !== 'join') onStart({ mode, settings })
+                }}
+              >
+                Abandon &amp; deal
+              </button>
+              <button className="option" onClick={() => setConfirmNew(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button className="setup-start" onClick={submit}>
+            {mode === 'single' ? 'Deal me in' : mode === 'host' ? 'Open the room' : 'Join game'}
+          </button>
+        )}
       </div>
     </div>
   )
