@@ -3,8 +3,8 @@ import { BotDriver } from '../ai/botDriver'
 import { gameReducer, initGame } from '../engine/game'
 import { legalCards } from '../engine/rules'
 import type { Color, Difficulty, GameAction, GameState, HouseRules } from '../engine/types'
-import { TARGET_SCORE } from '../engine/types'
 import { clearSavedGame, saveGame } from '../save'
+import { matchResultFor, submitResult } from '../net/leaderboard'
 
 export interface GameSettings {
   playerName: string
@@ -72,6 +72,7 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
   )
 
   const driverRef = useRef<BotDriver | null>(null)
+  const submittedRef = useRef(false)
   useEffect(() => {
     driverRef.current = new BotDriver(settings.difficulty, dispatch)
     return () => {
@@ -85,10 +86,17 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
   }, [state])
 
   useEffect(() => {
-    const matchOver = state.phase === 'roundOver' && state.scores.some((s) => s >= TARGET_SCORE)
-    if (matchOver) clearSavedGame()
-    else saveGame(state, settings.difficulty)
-  }, [state, settings.difficulty])
+    const result = matchResultFor(state, settings.playerName)
+    if (result) {
+      clearSavedGame()
+      if (!submittedRef.current) {
+        submittedRef.current = true
+        void submitResult(result)
+      }
+    } else {
+      saveGame(state, settings.difficulty)
+    }
+  }, [state, settings.playerName, settings.difficulty])
 
   return useMemo(() => makeApi(state, 0, dispatch), [state])
 }
