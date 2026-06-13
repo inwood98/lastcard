@@ -11,6 +11,7 @@ import { OpponentSeat } from './OpponentSeat'
 import { PilesArea } from './PilesArea'
 import { UnoControls } from './UnoControls'
 import { WinScreen } from './WinScreen'
+import { Leaderboard } from './Leaderboard'
 import './table.css'
 
 interface GameTableProps {
@@ -27,6 +28,7 @@ interface GameTableProps {
 export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: GameTableProps) {
   const { state, viewerId } = game
   const [fxPrefs, setFxPrefs] = useState<FxPrefs>(loadFxPrefs)
+  const [showBoard, setShowBoard] = useState(false)
   const { fx, onFlightDone } = useGameFx(state, viewerId, fxPrefs)
   const updateFxPrefs = (prefs: FxPrefs) => {
     setFxPrefs(prefs)
@@ -141,8 +143,10 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: Ga
           onPlayAgain={onPlayAgain}
           onNewMatch={onNewMatch}
           onLeave={onLeave}
+          onLeaderboard={() => setShowBoard(true)}
         />
       )}
+      {showBoard && <Leaderboard onClose={() => setShowBoard(false)} />}
 
       <FxOverlay fx={fx} onFlightDone={onFlightDone} />
     </div>

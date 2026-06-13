@@ -9,9 +9,11 @@ interface WinScreenProps {
   /** fresh match with zeroed scores — host/local only */
   onNewMatch?: () => void
   onLeave: () => void
+  /** open the global leaderboard — solo only */
+  onLeaderboard?: () => void
 }
 
-export function WinScreen({ state, viewerId, onPlayAgain, onNewMatch, onLeave }: WinScreenProps) {
+export function WinScreen({ state, viewerId, onPlayAgain, onNewMatch, onLeave, onLeaderboard }: WinScreenProps) {
   const winner = state.players[state.winner!]
   const viewerWon = viewerId === winner.id
   const matchOver = state.scores[winner.id] >= TARGET_SCORE
@@ -69,6 +71,11 @@ export function WinScreen({ state, viewerId, onPlayAgain, onNewMatch, onLeave }:
           <button className="btn" onClick={onLeave}>
             Leave table
           </button>
+          {onLeaderboard && (
+            <button className="btn" onClick={onLeaderboard}>
+              🏆 Leaderboard
+            </button>
+          )}
         </div>
       </div>
     </div>
