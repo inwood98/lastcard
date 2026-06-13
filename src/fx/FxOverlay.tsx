@@ -44,21 +44,25 @@ function FlyingCard({ flight, onDone }: { flight: Flight; onDone: () => void }) 
     const el = ref.current
     const from = anchorRect(flight.from)
     const to = anchorRect(flight.to)
-    if (!el || !from || !to || typeof el.animate !== 'function') {
+    // The discard pile wraps exactly one large card, so its rect is the size a
+    // flying card should be — the hand/seat anchors are whole containers.
+    const cardRect = anchorRect('discard')
+    if (!el || !from || !to || !cardRect || typeof el.animate !== 'function') {
       done.current()
       return
     }
-    el.style.width = `${from.width}px`
-    el.style.height = `${from.height}px`
-    const toX = to.x + (to.width - from.width) / 2
-    const toY = to.y + (to.height - from.height) / 2
+    const w = cardRect.width
+    const h = cardRect.height
+    el.style.width = `${w}px`
+    el.style.height = `${h}px`
+    const fromX = from.x + (from.width - w) / 2
+    const fromY = from.y + (from.height - h) / 2
+    const toX = to.x + (to.width - w) / 2
+    const toY = to.y + (to.height - h) / 2
     const anim = el.animate(
       [
-        { transform: `translate(${from.x}px, ${from.y}px)`, opacity: 1 },
-        {
-          transform: `translate(${toX}px, ${toY}px) scale(${to.width / from.width})`,
-          opacity: 1,
-        },
+        { transform: `translate(${fromX}px, ${fromY}px)`, opacity: 1 },
+        { transform: `translate(${toX}px, ${toY}px)`, opacity: 1 },
       ],
       {
         duration: FLIGHT_MS,
@@ -67,7 +71,12 @@ function FlyingCard({ flight, onDone }: { flight: Flight; onDone: () => void }) 
         fill: 'backwards',
       },
     )
-    anim.finished.catch(() => {}).finally(() => done.current())
+    // Only genuine completion removes the flight; a cancel (e.g. StrictMode's
+    // double-invoked effect cleanup) rejects and must be ignored.
+    anim.finished.then(
+      () => done.current(),
+      () => {},
+    )
     return () => anim.cancel()
     // flight is immutable per key — run the animation exactly once
     // eslint-disable-next-line react-hooks/exhaustive-deps
