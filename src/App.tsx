@@ -7,21 +7,29 @@ import { useGuestGame } from './hooks/useGuestGame'
 import { useHostGame } from './hooks/useHostGame'
 import { MAX_PLAYERS } from './net/protocol'
 import { loadSettings, saveSettings } from './storage'
+import type { GameState } from './engine/types'
+import { describeSave, loadSavedGame, settingsFromSave } from './save'
 import './App.css'
 
 type Screen =
   | { kind: 'menu' }
-  | { kind: 'single'; settings: GameSettings }
+  | { kind: 'single'; settings: GameSettings; initialState?: GameState }
   | { kind: 'host'; settings: GameSettings }
   | { kind: 'guest'; name: string; code: string }
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ kind: 'menu' })
   const [lastSettings, setLastSettings] = useState(loadSettings)
+  const [savedGame, setSavedGame] = useState(loadSavedGame)
   const [gameKey, setGameKey] = useState(0)
   // arriving via an invite link (…/uno/?join=CODE) opens the join screen pre-filled
   const [inviteCode] = useState(() => new URLSearchParams(location.search).get('join'))
-  const toMenu = () => setScreen({ kind: 'menu' })
+  // re-read the save when coming back to the menu (a finished match clears it,
+  // quitting mid-game leaves it resumable)
+  const toMenu = () => {
+    setSavedGame(loadSavedGame())
+    setScreen({ kind: 'menu' })
+  }
 
   useEffect(() => {
     if (inviteCode) history.replaceState(null, '', location.pathname)
@@ -29,6 +37,16 @@ export default function App() {
 
   const handleStart = (result: SetupResult) => {
     setGameKey((k) => k + 1)
+    if (result.mode === 'resume') {
+      const save = loadSavedGame()
+      if (!save) {
+        setSavedGame(null)
+        setScreen({ kind: 'menu' })
+        return
+      }
+      setScreen({ kind: 'single', settings: settingsFromSave(save), initialState: save.state })
+      return
+    }
     if (result.mode === 'join') {
       const updated = { ...lastSettings, playerName: result.name }
       setLastSettings(updated)
@@ -43,9 +61,23 @@ export default function App() {
 
   switch (screen.kind) {
     case 'menu':
-      return <SetupScreen initial={lastSettings} initialJoinCode={inviteCode} onStart={handleStart} />
+      return (
+        <SetupScreen
+          initial={lastSettings}
+          initialJoinCode={inviteCode}
+          savedSummary={savedGame ? describeSave(savedGame) : null}
+          onStart={handleStart}
+        />
+      )
     case 'single':
-      return <LocalGame key={gameKey} settings={screen.settings} onLeave={toMenu} />
+      return (
+        <LocalGame
+          key={gameKey}
+          settings={screen.settings}
+          initialState={screen.initialState}
+          onLeave={toMenu}
+        />
+      )
     case 'host':
       return <HostScreen key={gameKey} settings={screen.settings} onLeave={toMenu} />
     case 'guest':
@@ -54,13 +86,23 @@ export default function App() {
 }
 
 /** Single-player match: rounds carry scores until someone reaches the target */
-function LocalGame({ settings, onLeave }: { settings: GameSettings; onLeave: () => void }) {
+function LocalGame({
+  settings,
+  initialState,
+  onLeave,
+}: {
+  settings: GameSettings
+  /** present only when resuming a saved game; applies to the first round only */
+  initialState?: GameState
+  onLeave: () => void
+}) {
   const [round, setRound] = useState(0)
   const [scores, setScores] = useState<number[] | undefined>(undefined)
   return (
     <LocalRound
       key={round}
       settings={{ ...settings, scores }}
+      initialState={round === 0 ? initialState : undefined}
       onNextRound={(s) => {
         setScores(s)
         setRound((r) => r + 1)
@@ -76,16 +118,18 @@ function LocalGame({ settings, onLeave }: { settings: GameSettings; onLeave: () 
 
 function LocalRound({
   settings,
+  initialState,
   onNextRound,
   onNewMatch,
   onLeave,
 }: {
   settings: GameSettings
+  initialState?: GameState
   onNextRound: (scores: number[]) => void
   onNewMatch: () => void
   onLeave: () => void
 }) {
-  const game = useGame(settings)
+  const game = useGame(settings, initialState)
   return (
     <GameTable
       game={game}

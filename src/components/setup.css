@@ -238,3 +238,60 @@
   padding: 2px 8px;
   border-radius: 999px;
 }
+
+.setup-resume {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 16px;
+  border: 1px solid #3bab23;
+  border-radius: 12px;
+  background: rgba(59, 171, 35, 0.18);
+  color: #fff;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.setup-resume:hover {
+  background: rgba(59, 171, 35, 0.3);
+  transform: translateY(-1px);
+}
+
+.setup-resume-title {
+  font-size: 18px;
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+}
+
+.setup-resume-sub {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.setup-confirm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.setup-confirm p {
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+.setup-confirm-buttons {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.setup-confirm-buttons .setup-start {
+  flex: 2;
+}
+
+.setup-confirm-buttons .option {
+  flex: 1;
+}
