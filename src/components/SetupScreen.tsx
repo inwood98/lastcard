@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Difficulty, HouseRules } from '../engine/types'
 import type { GameSettings } from '../hooks/useGame'
 import { Card } from './Card'
+import { Leaderboard } from './Leaderboard'
 import './setup.css'
 
 export type SetupResult =
@@ -36,6 +37,7 @@ type Mode = (typeof MODES)[number]['value']
 export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }: SetupScreenProps) {
   const [mode, setMode] = useState<Mode>(initialJoinCode ? 'join' : 'single')
   const [confirmNew, setConfirmNew] = useState(false)
+  const [showBoard, setShowBoard] = useState(false)
   const [name, setName] = useState(initial.playerName)
   const [code, setCode] = useState(initialJoinCode?.toUpperCase() ?? '')
   const [botCount, setBotCount] = useState(initial.botCount)
@@ -223,7 +225,13 @@ export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }:
             {mode === 'single' ? 'Deal me in' : mode === 'host' ? 'Open the room' : 'Join game'}
           </button>
         )}
+        <button className="option setup-board-btn" onClick={() => setShowBoard(true)}>
+          🏆 Leaderboard
+        </button>
       </div>
+      {showBoard && (
+        <Leaderboard currentName={name.trim() || undefined} onClose={() => setShowBoard(false)} />
+      )}
     </div>
   )
 }
