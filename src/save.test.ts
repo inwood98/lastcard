@@ -34,6 +34,13 @@ describe('parseSave', () => {
     const save = { ...sampleSave(), difficulty: 'insane' }
     expect(parseSave(JSON.stringify(save))).toBeNull()
   })
+  it('returns null when the human seat has no hand array', () => {
+    const save = sampleSave()
+    // tampered save: seat 0 present but its hand is gone
+    const tampered = JSON.parse(JSON.stringify(save))
+    delete tampered.state.players[0].hand
+    expect(parseSave(JSON.stringify(tampered))).toBeNull()
+  })
 })
 
 describe('settingsFromSave', () => {

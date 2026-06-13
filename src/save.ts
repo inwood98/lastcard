@@ -24,6 +24,7 @@ export function parseSave(raw: string | null): SavedGame | null {
       !DIFFICULTIES.includes(parsed.difficulty) ||
       !state ||
       !Array.isArray(state.players) ||
+      !Array.isArray(state.players[0]?.hand) ||
       !Array.isArray(state.discardPile) ||
       !Array.isArray(state.scores) ||
       typeof state.currentPlayer !== 'number'
