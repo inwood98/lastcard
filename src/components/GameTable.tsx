@@ -11,6 +11,7 @@ import { OpponentSeat } from './OpponentSeat'
 import { PilesArea } from './PilesArea'
 import { UnoControls } from './UnoControls'
 import { WinScreen } from './WinScreen'
+import { Leaderboard } from './Leaderboard'
 import './table.css'
 
 interface GameTableProps {
@@ -22,11 +23,14 @@ interface GameTableProps {
   onLeave: () => void
   /** extra host-only UI such as disconnect banners */
   banner?: ReactNode
+  /** solo play — only then do results count toward the global leaderboard */
+  solo?: boolean
 }
 
-export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: GameTableProps) {
+export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner, solo }: GameTableProps) {
   const { state, viewerId } = game
   const [fxPrefs, setFxPrefs] = useState<FxPrefs>(loadFxPrefs)
+  const [showBoard, setShowBoard] = useState(false)
   const { fx, onFlightDone } = useGameFx(state, viewerId, fxPrefs)
   const updateFxPrefs = (prefs: FxPrefs) => {
     setFxPrefs(prefs)
@@ -141,7 +145,11 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: Ga
           onPlayAgain={onPlayAgain}
           onNewMatch={onNewMatch}
           onLeave={onLeave}
+          onLeaderboard={solo ? () => setShowBoard(true) : undefined}
         />
+      )}
+      {showBoard && (
+        <Leaderboard currentName={viewer.name} onClose={() => setShowBoard(false)} />
       )}
 
       <FxOverlay fx={fx} onFlightDone={onFlightDone} />
