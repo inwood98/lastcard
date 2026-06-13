@@ -23,9 +23,11 @@ interface GameTableProps {
   onLeave: () => void
   /** extra host-only UI such as disconnect banners */
   banner?: ReactNode
+  /** solo play — only then do results count toward the global leaderboard */
+  solo?: boolean
 }
 
-export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: GameTableProps) {
+export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner, solo }: GameTableProps) {
   const { state, viewerId } = game
   const [fxPrefs, setFxPrefs] = useState<FxPrefs>(loadFxPrefs)
   const [showBoard, setShowBoard] = useState(false)
@@ -143,10 +145,12 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner }: Ga
           onPlayAgain={onPlayAgain}
           onNewMatch={onNewMatch}
           onLeave={onLeave}
-          onLeaderboard={() => setShowBoard(true)}
+          onLeaderboard={solo ? () => setShowBoard(true) : undefined}
         />
       )}
-      {showBoard && <Leaderboard onClose={() => setShowBoard(false)} />}
+      {showBoard && (
+        <Leaderboard currentName={viewer.name} onClose={() => setShowBoard(false)} />
+      )}
 
       <FxOverlay fx={fx} onFlightDone={onFlightDone} />
     </div>

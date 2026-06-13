@@ -16,7 +16,7 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
   )
 
   useEffect(() => {
-    if (status === 'disabled') return
+    if (!isConfigured()) return
     let live = true
     fetchLeaderboard()
       .then((data) => {
@@ -31,7 +31,7 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
     return () => {
       live = false
     }
-  }, [status])
+  }, [])
 
   return (
     <div className="overlay">
@@ -49,10 +49,10 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
           <table className="scoreboard">
             <thead>
               <tr>
-                <td>#</td>
-                <td>Player</td>
-                <td>Wins</td>
-                <td>Games</td>
+                <th scope="col">#</th>
+                <th scope="col">Player</th>
+                <th scope="col">Wins</th>
+                <th scope="col">Games</th>
               </tr>
             </thead>
             <tbody>

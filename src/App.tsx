@@ -136,6 +136,7 @@ function LocalRound({
       onPlayAgain={() => onNextRound(game.state.scores)}
       onNewMatch={onNewMatch}
       onLeave={onLeave}
+      solo
     />
   )
 }
