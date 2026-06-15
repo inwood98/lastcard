@@ -12,7 +12,7 @@ export const CARD_COLORS: Record<Color, string> = {
 interface CardProps {
   card?: CardType
   faceDown?: boolean
-  size?: 'sm' | 'md' | 'lg'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   playable?: boolean
   onClick?: () => void
   /** color chosen for a wild sitting on the discard pile */

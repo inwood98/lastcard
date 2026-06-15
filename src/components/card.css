@@ -39,6 +39,11 @@
   height: 138px;
 }
 
+.uno-card-xl {
+  width: 120px;
+  height: 180px;
+}
+
 .uno-card-clickable {
   cursor: pointer;
 }
@@ -63,5 +68,9 @@
   .uno-card-lg {
     width: 70px;
     height: 105px;
+  }
+  .uno-card-xl {
+    width: 92px;
+    height: 138px;
   }
 }

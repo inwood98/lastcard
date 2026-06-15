@@ -21,7 +21,7 @@ export function PilesArea({ state, canDraw, canTakePenalty, onDraw }: PilesAreaP
         role="button"
         aria-label="Draw pile"
       >
-        <Card faceDown size="lg" />
+        <Card faceDown size="xl" />
         {canTakePenalty && <div className="pile-label">Draw {state.pendingDraw}</div>}
         {canDraw && !canTakePenalty && <div className="pile-label">Draw</div>}
       </div>
@@ -44,7 +44,7 @@ export function PilesArea({ state, canDraw, canTakePenalty, onDraw }: PilesAreaP
         className="discard-pile"
         style={{ boxShadow: `0 0 26px 6px ${CARD_COLORS[state.currentColor]}66` }}
       >
-        <Card key={top.id} card={top} size="lg" activeColor={state.currentColor} />
+        <Card key={top.id} card={top} size="xl" activeColor={state.currentColor} />
       </div>
     </div>
   )

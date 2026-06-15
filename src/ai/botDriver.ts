@@ -79,7 +79,7 @@ export class BotDriver {
       }
       const action = chooseMove(state, actorId, this.difficulty)
       if (action) this.dispatch(action)
-    }, randomDelay(900, 1500))
+    }, randomDelay(1800, 2800))
   }
 
   /** A bot that forgot UNO eventually remembers (catchable in the meantime) */
