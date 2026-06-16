@@ -12,11 +12,16 @@ export function StatsModal({ playerName, onClose }: StatsModalProps) {
   const [achievements, setAchievements] = useState(computeAchievements([]))
 
   useEffect(() => {
+    let cancelled = false
     fetchPlayerMatches(playerName).then((matches) => {
+      if (cancelled) return
       setStats(computeStats(matches))
       setAchievements(computeAchievements(matches))
       setLoading(false)
     })
+    return () => {
+      cancelled = true
+    }
   }, [playerName])
 
   return (
