@@ -30,7 +30,7 @@ describe('submitResult', () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true })
     vi.stubGlobal('fetch', fetchMock)
 
-    await submitResult({ playerName: 'Ada', won: true, points: 510 })
+    await submitResult({ playerName: 'Ada', won: true, points: 510, caughtOpponents: 0 })
 
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, opts] = fetchMock.mock.calls[0]
@@ -42,6 +42,7 @@ describe('submitResult', () => {
       player_name: 'Ada',
       won: true,
       points: 510,
+      caught_opponents: 0,
       mode: 'solo',
     })
   })
@@ -51,7 +52,7 @@ describe('submitResult', () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
-    await submitResult({ playerName: 'Ada', won: true, points: 1 })
+    await submitResult({ playerName: 'Ada', won: true, points: 1, caughtOpponents: 0 })
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -59,7 +60,7 @@ describe('submitResult', () => {
     vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
-    await expect(submitResult({ playerName: 'Ada', won: true, points: 1 })).resolves.toBeUndefined()
+    await expect(submitResult({ playerName: 'Ada', won: true, points: 1, caughtOpponents: 0 })).resolves.toBeUndefined()
   })
 })
 
@@ -104,11 +105,11 @@ describe('matchResultFor', () => {
 
   it('returns a win for the human when seat 0 reaches the target', () => {
     const state: GameState = { ...midGame(), phase: 'roundOver', scores: [510, 120, 90] }
-    expect(matchResultFor(state, 'Ada')).toEqual({ playerName: 'Ada', won: true, points: 510 })
+    expect(matchResultFor(state, 'Ada')).toEqual({ playerName: 'Ada', won: true, points: 510, caughtOpponents: 0 })
   })
 
   it('returns a loss for the human when a bot reaches the target', () => {
     const state: GameState = { ...midGame(), phase: 'roundOver', scores: [200, 505, 90] }
-    expect(matchResultFor(state, 'Ada')).toEqual({ playerName: 'Ada', won: false, points: 200 })
+    expect(matchResultFor(state, 'Ada')).toEqual({ playerName: 'Ada', won: false, points: 200, caughtOpponents: 0 })
   })
 })

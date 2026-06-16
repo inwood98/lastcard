@@ -11,6 +11,7 @@ export interface MatchResult {
   playerName: string
   won: boolean
   points: number
+  caughtOpponents: number
 }
 
 export function isConfigured(): boolean {
@@ -21,6 +22,7 @@ export function isConfigured(): boolean {
 export async function submitResult(result: MatchResult): Promise<void> {
   const { url, anon } = supabaseEnv()
   if (!url || !anon) return
+  if (bannedNames.has(result.playerName.toLowerCase())) return  // banned player
   try {
     const res = await fetch(`${url}/rest/v1/match_results`, {
       method: 'POST',
@@ -34,6 +36,7 @@ export async function submitResult(result: MatchResult): Promise<void> {
         player_name: result.playerName,
         won: result.won,
         points: result.points,
+        caught_opponents: result.caughtOpponents,
         mode: 'solo',
       }),
     })
@@ -58,6 +61,23 @@ export async function fetchLeaderboard(): Promise<LeaderboardRow[]> {
   }
 }
 
+let bannedNames = new Set<string>()
+
+export async function loadBannedNames(): Promise<void> {
+  const { url, anon } = supabaseEnv()
+  if (!url || !anon) return
+  try {
+    const res = await fetch(`${url}/rest/v1/banned_names?select=name`, {
+      headers: { apikey: anon, Authorization: `Bearer ${anon}` },
+    })
+    if (!res.ok) return
+    const rows = (await res.json()) as { name: string }[]
+    bannedNames = new Set(rows.map((r) => r.name.toLowerCase()))
+  } catch {
+    // ignore — ban enforcement is best-effort
+  }
+}
+
 /** The human (seat 0) result for a completed solo match, or null if the match isn't over. */
 export function matchResultFor(state: GameState, playerName: string): MatchResult | null {
   const matchOver = state.phase === 'roundOver' && state.scores.some((s) => s >= TARGET_SCORE)
@@ -66,5 +86,6 @@ export function matchResultFor(state: GameState, playerName: string): MatchResul
     playerName,
     won: state.scores[0] >= TARGET_SCORE,
     points: state.scores[0],
+    caughtOpponents: 0,  // caller (useGame) overrides this with the real count
   }
 }
