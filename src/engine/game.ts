@@ -71,6 +71,7 @@ export function initGame(config: GameConfig): GameState {
     rules: config.rules,
     events: [],
     scores: config.scores ?? seats.map(() => 0),
+    targetScore: config.targetScore ?? TARGET_SCORE,
     seed,
   }
 
@@ -267,7 +268,7 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
         )
         state.scores[playerId] += points
         addEvent(state, `${player.name} wins the round and scores ${points} points!`, {
-          kind: state.scores[playerId] >= TARGET_SCORE ? 'matchOver' : 'roundOver',
+          kind: state.scores[playerId] >= state.targetScore ? 'matchOver' : 'roundOver',
           playerId,
         })
         return state

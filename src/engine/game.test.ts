@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { buildDeck, shuffle } from './deck'
 import { gameReducer, initGame } from './game'
 import { isPlayable, legalCards } from './rules'
-import { DEFAULT_RULES, type Card, type GameState, type HouseRules } from './types'
+import { DEFAULT_RULES, TARGET_SCORE, type Card, type GameState, type HouseRules } from './types'
 
 let nextId = 1000
 function card(color: Card['color'], value: Card['value']): Card {
@@ -18,6 +18,7 @@ interface StateOptions {
   direction?: 1 | -1
   drawPile?: Card[]
   scores?: number[]
+  targetScore?: number
 }
 
 function makeState(opts: StateOptions): GameState {
@@ -42,6 +43,7 @@ function makeState(opts: StateOptions): GameState {
     rules: { ...DEFAULT_RULES, ...opts.rules },
     events: [],
     scores: opts.scores ?? opts.hands.map(() => 0),
+    targetScore: opts.targetScore ?? TARGET_SCORE,
     seed: 42,
   }
 }
@@ -91,6 +93,13 @@ describe('initGame', () => {
     for (const p of state.players) expect(p.hand).toHaveLength(7)
     expect(state.discardPile[0].value).not.toBe('wild4')
     expect(state.drawPile.length + state.discardPile.length + 28).toBe(108)
+  })
+
+  it('defaults targetScore to 500 and honors an explicit value', () => {
+    expect(initGame({ playerName: 'A', botCount: 1, rules: DEFAULT_RULES }).targetScore).toBe(500)
+    expect(
+      initGame({ playerName: 'A', botCount: 1, rules: DEFAULT_RULES, targetScore: 150 }).targetScore,
+    ).toBe(150)
   })
 
   it('accepts explicit seats mixing humans and bots in turn order', () => {
@@ -397,6 +406,29 @@ describe('winning', () => {
     })
     const next = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: c.id })
     expect(next.scores).toEqual([83, 0, 0])
+  })
+
+  it('ends the match at a custom target score', () => {
+    const winning = card('red', 5)
+    const state = makeState({
+      hands: [[winning], [card(null, 'wild4')]],
+      top: card('red', 9),
+      scores: [120, 0],
+      targetScore: 150,
+    })
+    const next = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: winning.id })
+    expect(next.events[next.events.length - 1].kind).toBe('matchOver')
+  })
+
+  it('stays a round win below the default 500 target', () => {
+    const winning = card('red', 5)
+    const state = makeState({
+      hands: [[winning], [card(null, 'wild4')]],
+      top: card('red', 9),
+      scores: [160, 0],
+    })
+    const next = gameReducer(state, { type: 'PLAY_CARD', playerId: 0, cardId: winning.id })
+    expect(next.events[next.events.length - 1].kind).toBe('roundOver')
   })
 
   it('scores carry over to the next round via config', () => {

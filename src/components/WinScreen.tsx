@@ -1,5 +1,5 @@
 import { cardPoints } from '../engine/game'
-import { TARGET_SCORE, type GameState } from '../engine/types'
+import type { GameState } from '../engine/types'
 
 interface WinScreenProps {
   state: GameState
@@ -16,7 +16,7 @@ interface WinScreenProps {
 export function WinScreen({ state, viewerId, onPlayAgain, onNewMatch, onLeave, onLeaderboard }: WinScreenProps) {
   const winner = state.players[state.winner!]
   const viewerWon = viewerId === winner.id
-  const matchOver = state.scores[winner.id] >= TARGET_SCORE
+  const matchOver = state.scores[winner.id] >= state.targetScore
   const roundPoints = state.players.reduce(
     (sum, p) => sum + p.hand.reduce((s, c) => s + cardPoints(c), 0),
     0,
@@ -36,7 +36,7 @@ export function WinScreen({ state, viewerId, onPlayAgain, onNewMatch, onLeave, o
               : `${winner.name} wins the round`}
         </h2>
         <p>
-          {winner.name} scores {roundPoints} points{matchOver ? '' : ` — first to ${TARGET_SCORE} wins`}
+          {winner.name} scores {roundPoints} points{matchOver ? '' : ` — first to ${state.targetScore} wins`}
         </p>
 
         <table className="scoreboard">

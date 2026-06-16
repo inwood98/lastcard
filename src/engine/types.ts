@@ -99,12 +99,17 @@ export interface GameState {
   events: GameEvent[]
   /** match points per seat, including the just-finished round once won */
   scores: number[]
+  /** match points needed to win; carried per game so it can vary by setting */
+  targetScore: number
   /** PRNG state for reshuffles */
   seed: number
 }
 
 /** First player to reach this many points wins the match */
 export const TARGET_SCORE = 500
+
+/** Selectable match targets offered on the setup screen */
+export const TARGET_SCORES = [150, 300, 500] as const
 
 export type GameAction =
   | { type: 'PLAY_CARD'; playerId: number; cardId: number; chosenColor?: Color }
@@ -129,5 +134,7 @@ export interface GameConfig {
   rules: HouseRules
   /** carried-over match scores when starting the next round */
   scores?: number[]
+  /** match points needed to win; defaults to 500 when omitted */
+  targetScore?: number
   seed?: number
 }
