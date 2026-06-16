@@ -5,6 +5,7 @@ import { legalCards } from '../engine/rules'
 import type { Color, Difficulty, GameAction, GameState, HouseRules } from '../engine/types'
 import { clearSavedGame, saveGame } from '../save'
 import { matchResultFor, submitResult } from '../net/leaderboard'
+import { handSize } from '../net/redact'
 
 export interface GameSettings {
   playerName: string
@@ -104,7 +105,10 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
     () => ({
       ...makeApi(state, 0, dispatch),
       catchPlayer: (targetId: number) => {
-        catchCountRef.current++
+        const target = state.players.find((p) => p.id === targetId)
+        if (target && handSize(target) === 1 && !target.calledLastCard && state.winner === null) {
+          catchCountRef.current++
+        }
         dispatch({ type: 'CATCH_LAST_CARD', callerId: 0, targetId })
       },
     }),
