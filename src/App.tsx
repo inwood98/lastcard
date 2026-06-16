@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { GameTable } from './components/GameTable'
 import { Lobby } from './components/Lobby'
 import { SetupScreen, type SetupResult } from './components/SetupScreen'
@@ -9,7 +9,10 @@ import { MAX_PLAYERS } from './net/protocol'
 import { loadSettings, saveSettings } from './storage'
 import type { GameState } from './engine/types'
 import { describeSave, loadSavedGame, settingsFromSave } from './save'
+import { loadBannedNames } from './net/leaderboard'
 import './App.css'
+
+const AdminApp = lazy(() => import('./components/AdminApp'))
 
 type Screen =
   | { kind: 'menu' }
@@ -34,6 +37,18 @@ export default function App() {
   useEffect(() => {
     if (inviteCode) history.replaceState(null, '', location.pathname)
   }, [inviteCode])
+
+  useEffect(() => {
+    void loadBannedNames()
+  }, [])
+
+  if (window.location.hash === '#admin') {
+    return (
+      <Suspense fallback={<div style={{ padding: 32, color: '#fff' }}>Loading admin…</div>}>
+        <AdminApp />
+      </Suspense>
+    )
+  }
 
   const handleStart = (result: SetupResult) => {
     setGameKey((k) => k + 1)
