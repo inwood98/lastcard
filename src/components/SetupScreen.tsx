@@ -3,6 +3,8 @@ import type { Difficulty, HouseRules } from '../engine/types'
 import type { GameSettings } from '../hooks/useGame'
 import { Card } from './Card'
 import { Leaderboard } from './Leaderboard'
+import { StatsModal } from './StatsModal'
+import { isConfigured } from '../net/leaderboard'
 import './setup.css'
 
 export type SetupResult =
@@ -38,6 +40,7 @@ export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }:
   const [mode, setMode] = useState<Mode>(initialJoinCode ? 'join' : 'single')
   const [confirmNew, setConfirmNew] = useState(false)
   const [showBoard, setShowBoard] = useState(false)
+  const [showStats, setShowStats] = useState(false)
   const [name, setName] = useState(initial.playerName)
   const [code, setCode] = useState(initialJoinCode?.toUpperCase() ?? '')
   const [botCount, setBotCount] = useState(initial.botCount)
@@ -225,12 +228,22 @@ export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }:
             {mode === 'single' ? 'Deal me in' : mode === 'host' ? 'Open the room' : 'Join game'}
           </button>
         )}
-        <button className="option setup-board-btn" onClick={() => setShowBoard(true)}>
-          🏆 Leaderboard
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button className="option setup-board-btn" onClick={() => setShowBoard(true)}>
+            🏆 Leaderboard
+          </button>
+          {isConfigured() && (
+            <button className="option setup-board-btn" onClick={() => setShowStats(true)}>
+              📊 My Stats
+            </button>
+          )}
+        </div>
       </div>
       {showBoard && (
         <Leaderboard currentName={name.trim() || undefined} onClose={() => setShowBoard(false)} />
+      )}
+      {showStats && (
+        <StatsModal playerName={name.trim() || 'You'} onClose={() => setShowStats(false)} />
       )}
     </div>
   )
