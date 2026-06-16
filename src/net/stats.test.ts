@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest'
-import { computeStats, computeAchievements } from './stats'
+import { describe, it, expect, vi } from 'vitest'
+import { computeStats, computeAchievements, fetchPlayerMatches } from './stats'
 import type { PlayerMatch } from './stats'
 
 function match(
@@ -86,5 +86,51 @@ describe('computeAchievements', () => {
 
   it('returns 8 achievements', () => {
     expect(computeAchievements([])).toHaveLength(8)
+  })
+})
+
+describe('fetchPlayerMatches', () => {
+  it('returns [] when Supabase is not configured', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+    const result = await fetchPlayerMatches('Alice')
+    expect(result).toEqual([])
+    vi.unstubAllEnvs()
+  })
+
+  it('returns [] when response is not ok', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+    vi.stubGlobal('fetch', async () => ({ ok: false, json: async () => [] } as Response))
+    const result = await fetchPlayerMatches('Alice')
+    expect(result).toEqual([])
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+  })
+
+  it('builds correct URL with encoded player name', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+    let capturedUrl = ''
+    vi.stubGlobal('fetch', async (url: string) => {
+      capturedUrl = url
+      return { ok: true, json: async () => [] } as Response
+    })
+    await fetchPlayerMatches("o'brien")
+    expect(capturedUrl).toContain('player_name=eq.o%27brien')
+    expect(capturedUrl).toContain('match_results')
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
+  })
+
+  it('returns match rows on success', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+    const rows = [{ id: '1', won: true, points: 50, caught_opponents: 1, created_at: '2026-01-01T00:00:00Z' }]
+    vi.stubGlobal('fetch', async () => ({ ok: true, json: async () => rows } as Response))
+    const result = await fetchPlayerMatches('Alice')
+    expect(result).toEqual(rows)
+    vi.unstubAllGlobals()
+    vi.unstubAllEnvs()
   })
 })

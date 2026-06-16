@@ -72,14 +72,15 @@ export async function fetchPlayerMatches(playerName: string): Promise<PlayerMatc
   const { url, anon } = supabaseEnv()
   if (!url || !anon) return []
   try {
-    const encoded = encodeURIComponent(playerName)
+    const encoded = encodeURIComponent(playerName).replace(/'/g, '%27')
     const res = await fetch(
       `${url}/rest/v1/match_results?player_name=eq.${encoded}&select=id,won,points,caught_opponents,created_at&order=created_at.desc`,
       { headers: { apikey: anon, Authorization: `Bearer ${anon}` } },
     )
     if (!res.ok) return []
     return (await res.json()) as PlayerMatch[]
-  } catch {
+  } catch (err) {
+    console.warn('stats: fetch failed', err)
     return []
   }
 }
