@@ -29,6 +29,7 @@ export interface GameApi {
   callLastCard: () => void
   catchPlayer: (targetId: number) => void
   challenge: (accept: boolean) => void
+  catchCount: number
 }
 
 export function makeApi(
@@ -48,6 +49,7 @@ export function makeApi(
     callLastCard: () => dispatch({ type: 'CALL_LAST_CARD', playerId: viewerId }),
     catchPlayer: (targetId) => dispatch({ type: 'CATCH_LAST_CARD', callerId: viewerId, targetId }),
     challenge: (accept) => dispatch({ type: 'CHALLENGE', accept }),
+    catchCount: 0,
   }
 }
 
@@ -57,7 +59,7 @@ export function makeApi(
  * from it; otherwise a fresh game is dealt. Every state change is auto-saved,
  * except a completed match, which clears the save instead.
  */
-export function useGame(settings: GameSettings, initialState?: GameState): GameApi {
+export function useGame(settings: GameSettings, initialState?: GameState, initialCatchCount = 0): GameApi {
   const [state, dispatch] = useReducer(
     gameReducer,
     { settings, initialState },
@@ -74,7 +76,7 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
 
   const driverRef = useRef<BotDriver | null>(null)
   const submittedRef = useRef(false)
-  const catchCountRef = useRef(0)
+  const catchCountRef = useRef(initialCatchCount)
   useEffect(() => {
     driverRef.current = new BotDriver(settings.difficulty, dispatch)
     return () => {
@@ -111,6 +113,7 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
         }
         dispatch({ type: 'CATCH_LAST_CARD', callerId: 0, targetId })
       },
+      catchCount: catchCountRef.current,
     }),
     [state],
   )

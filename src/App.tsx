@@ -113,17 +113,21 @@ function LocalGame({
 }) {
   const [round, setRound] = useState(0)
   const [scores, setScores] = useState<number[] | undefined>(undefined)
+  const [caughtTotal, setCaughtTotal] = useState(0)
   return (
     <LocalRound
       key={round}
       settings={{ ...settings, scores }}
       initialState={round === 0 ? initialState : undefined}
-      onNextRound={(s) => {
+      initialCatchCount={caughtTotal}
+      onNextRound={(s, catches) => {
         setScores(s)
+        setCaughtTotal((t) => t + catches)
         setRound((r) => r + 1)
       }}
       onNewMatch={() => {
         setScores(undefined)
+        setCaughtTotal(0)
         setRound((r) => r + 1)
       }}
       onLeave={onLeave}
@@ -134,21 +138,23 @@ function LocalGame({
 function LocalRound({
   settings,
   initialState,
+  initialCatchCount,
   onNextRound,
   onNewMatch,
   onLeave,
 }: {
   settings: GameSettings
   initialState?: GameState
-  onNextRound: (scores: number[]) => void
+  initialCatchCount?: number
+  onNextRound: (scores: number[], catches: number) => void
   onNewMatch: () => void
   onLeave: () => void
 }) {
-  const game = useGame(settings, initialState)
+  const game = useGame(settings, initialState, initialCatchCount)
   return (
     <GameTable
       game={game}
-      onPlayAgain={() => onNextRound(game.state.scores)}
+      onPlayAgain={() => onNextRound(game.state.scores, game.catchCount)}
       onNewMatch={onNewMatch}
       onLeave={onLeave}
       solo
