@@ -1,4 +1,5 @@
 import { TARGET_SCORE, type GameState } from '../engine/types'
+import { supabaseEnv } from './env'
 
 export interface LeaderboardRow {
   player_name: string
@@ -12,20 +13,13 @@ export interface MatchResult {
   points: number
 }
 
-function env() {
-  return {
-    url: import.meta.env.VITE_SUPABASE_URL as string | undefined,
-    anon: import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined,
-  }
-}
-
 export function isConfigured(): boolean {
-  const { url, anon } = env()
+  const { url, anon } = supabaseEnv()
   return Boolean(url && anon)
 }
 
 export async function submitResult(result: MatchResult): Promise<void> {
-  const { url, anon } = env()
+  const { url, anon } = supabaseEnv()
   if (!url || !anon) return
   try {
     const res = await fetch(`${url}/rest/v1/match_results`, {
@@ -50,7 +44,7 @@ export async function submitResult(result: MatchResult): Promise<void> {
 }
 
 export async function fetchLeaderboard(): Promise<LeaderboardRow[]> {
-  const { url, anon } = env()
+  const { url, anon } = supabaseEnv()
   if (!url || !anon) return []
   try {
     const res = await fetch(`${url}/rest/v1/leaderboard?select=*`, {
