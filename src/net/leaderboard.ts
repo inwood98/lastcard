@@ -114,7 +114,8 @@ export function subscribeToResults(
   onStatus?: (connected: boolean) => void,
 ): () => void {
   if (!isConfigured()) return () => {}
-  const channel = supabase()
+  const client = supabase()
+  const channel = client
     .channel('leaderboard-results')
     .on(
       'postgres_changes',
@@ -123,6 +124,6 @@ export function subscribeToResults(
     )
     .subscribe((status) => onStatus?.(status === 'SUBSCRIBED'))
   return () => {
-    supabase().removeChannel(channel)
+    client.removeChannel(channel)
   }
 }

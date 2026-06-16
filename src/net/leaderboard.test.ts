@@ -216,6 +216,8 @@ describe('subscribeToResults', () => {
     const statusCb = channel.subscribe.mock.calls[0][0] as (s: string) => void
     statusCb('SUBSCRIBED')
     expect(onStatus).toHaveBeenCalledWith(true)
+    statusCb('CHANNEL_ERROR')
+    expect(onStatus).toHaveBeenCalledWith(false)
 
     unsub()
     expect(removeChannel).toHaveBeenCalledWith(channel)
