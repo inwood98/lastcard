@@ -52,6 +52,7 @@ export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }:
     botCount,
     difficulty,
     rules,
+    targetScore: initial.targetScore,
   }
 
   const submit = () => {

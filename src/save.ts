@@ -8,7 +8,7 @@ export interface SavedGame {
   state: GameState
 }
 
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 const SAVE_KEY = 'lastcard-save'
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
 
@@ -45,6 +45,7 @@ export function settingsFromSave(save: SavedGame): GameSettings {
     botCount: state.players.length - 1,
     difficulty: save.difficulty,
     rules: state.rules,
+    targetScore: state.targetScore,
     scores: state.scores,
   }
 }

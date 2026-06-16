@@ -31,6 +31,7 @@ const CONFIG: HostConfig = {
   botCount: 0,
   difficulty: 'medium',
   rules: DEFAULT_RULES,
+  targetScore: 500,
 }
 
 async function setupTable(guestNames: string[], config: Partial<HostConfig> = {}) {

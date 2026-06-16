@@ -1,4 +1,4 @@
-import { DEFAULT_RULES } from './engine/types'
+import { DEFAULT_RULES, TARGET_SCORE } from './engine/types'
 import type { GameSettings } from './hooks/useGame'
 
 const KEY = 'lastcard-settings'
@@ -8,6 +8,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   botCount: 3,
   difficulty: 'medium',
   rules: DEFAULT_RULES,
+  targetScore: TARGET_SCORE,
 }
 
 export function loadSettings(): GameSettings {

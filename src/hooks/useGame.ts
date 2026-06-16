@@ -12,6 +12,8 @@ export interface GameSettings {
   botCount: number
   difficulty: Difficulty
   rules: HouseRules
+  /** match points needed to win (150 / 300 / 500) */
+  targetScore: number
   /** match scores carried into this round */
   scores?: number[]
 }
@@ -71,6 +73,7 @@ export function useGame(settings: GameSettings, initialState?: GameState, initia
             botCount: settings.botCount,
             rules: settings.rules,
             scores: settings.scores,
+            targetScore: settings.targetScore,
           }),
   )
 

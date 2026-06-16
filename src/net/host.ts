@@ -17,6 +17,7 @@ export interface HostConfig {
   botCount: number
   difficulty: Difficulty
   rules: HouseRules
+  targetScore: number
 }
 
 interface Guest {
@@ -106,7 +107,7 @@ export class HostSession {
       ),
     ]
     joined.forEach((g, i) => (g.seatId = i + 1))
-    this.state = initGame({ seats, rules: this.config.rules })
+    this.state = initGame({ seats, rules: this.config.rules, targetScore: this.config.targetScore })
     this.phase = 'playing'
     this.driver?.stop()
     this.driver = new BotDriver(this.config.difficulty, (a) => this.dispatch(a))
@@ -131,6 +132,7 @@ export class HostSession {
       seats,
       rules: this.config.rules,
       scores: resetScores ? undefined : this.state.scores,
+      targetScore: this.config.targetScore,
     })
     this.driver?.stop()
     this.driver = new BotDriver(this.config.difficulty, (a) => this.dispatch(a))

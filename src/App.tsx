@@ -182,6 +182,7 @@ function HostScreen({ settings, onLeave }: { settings: GameSettings; onLeave: ()
     botCount: settings.botCount,
     difficulty: settings.difficulty,
     rules: settings.rules,
+    targetScore: settings.targetScore,
   })
   const session = host.session
 
