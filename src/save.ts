@@ -27,7 +27,8 @@ export function parseSave(raw: string | null): SavedGame | null {
       !Array.isArray(state.players[0]?.hand) ||
       !Array.isArray(state.discardPile) ||
       !Array.isArray(state.scores) ||
-      typeof state.currentPlayer !== 'number'
+      typeof state.currentPlayer !== 'number' ||
+      typeof state.targetScore !== 'number'
     ) {
       return null
     }
