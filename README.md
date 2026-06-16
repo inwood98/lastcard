@@ -3,8 +3,6 @@
 A browser-based shedding card game — play solo against 1–5 computer opponents, or host an
 online table for 2–4 friends (bots fill the empty seats).
 
-**Play it:** https://inwood98.github.io/lastcard/
-
 ## Features
 
 - Classic crazy-eights-style rules: 108-card deck, Skip / Reverse / Draw Two / Wild / Wild Draw
