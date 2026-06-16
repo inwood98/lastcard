@@ -60,17 +60,21 @@ export async function fetchAdminBannedNames(): Promise<BannedName[]> {
 }
 
 export async function deletePlayerResults(playerName: string): Promise<void> {
-  await supabase().from('match_results').delete().eq('player_name', playerName)
+  const { error } = await supabase().from('match_results').delete().eq('player_name', playerName)
+  if (error) throw error
 }
 
 export async function deleteMatchResult(id: string): Promise<void> {
-  await supabase().from('match_results').delete().eq('id', id)
+  const { error } = await supabase().from('match_results').delete().eq('id', id)
+  if (error) throw error
 }
 
 export async function banName(name: string): Promise<void> {
-  await supabase().from('banned_names').upsert({ name })
+  const { error } = await supabase().from('banned_names').upsert({ name })
+  if (error) throw error
 }
 
 export async function unbanName(name: string): Promise<void> {
-  await supabase().from('banned_names').delete().eq('name', name)
+  const { error } = await supabase().from('banned_names').delete().eq('name', name)
+  if (error) throw error
 }
