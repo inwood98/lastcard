@@ -72,3 +72,20 @@ drop policy if exists "auth manage bans" on banned_names;
 create policy "auth manage bans" on banned_names for all to authenticated using (true) with check (true);
 
 grant select on leaderboard to anon;
+
+-- ---------------------------------------------------------------------------
+-- Realtime: broadcast match_results inserts so the open leaderboard updates live.
+-- Idempotent — only adds the table to the publication if it isn't already there.
+-- ---------------------------------------------------------------------------
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'match_results'
+  ) then
+    alter publication supabase_realtime add table match_results;
+  end if;
+end $$;

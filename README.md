@@ -62,6 +62,11 @@ To enable it:
 The admin dashboard lives at the `#admin` URL hash (e.g. `…/lastcard/#admin`) and signs in via
 Supabase Auth.
 
+The leaderboard updates live while it's open via Supabase Realtime. The SQL above already adds
+`match_results` to the `supabase_realtime` publication; for an existing project you can instead
+enable it once in the dashboard under **Database → Replication**. Without it the leaderboard
+still works — it just won't update until reopened.
+
 There is no anti-cheat: any client can submit results, and results are publicly readable (this
 is what powers "My Stats"). That's a deliberate starting point — add server-side validation
 later if it becomes a problem.

@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react'
-import { fetchLeaderboard, isConfigured, type LeaderboardRow } from '../net/leaderboard'
+import { useEffect, useRef, useState } from 'react'
+import {
+  changedPlayers,
+  fetchLeaderboard,
+  isConfigured,
+  subscribeToResults,
+  type LeaderboardRow,
+} from '../net/leaderboard'
 
 interface LeaderboardProps {
   /** highlight this player's row */
@@ -9,34 +15,84 @@ interface LeaderboardProps {
 
 type Status = 'loading' | 'ready' | 'error' | 'disabled'
 
+function sortRows(data: LeaderboardRow[]): LeaderboardRow[] {
+  return [...data].sort((a, b) => b.wins - a.wins || a.games - b.games)
+}
+
 export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
   const [rows, setRows] = useState<LeaderboardRow[]>([])
   const [status, setStatus] = useState<Status>(() =>
     isConfigured() ? 'loading' : 'disabled',
   )
+  const [live, setLive] = useState(false)
+  const [flashing, setFlashing] = useState<Set<string>>(new Set())
+  // mirrors `rows` so the live-refresh closure always diffs against what's shown;
+  // set synchronously next to every setRows so a fast first event isn't stale.
+  const rowsRef = useRef<LeaderboardRow[]>([])
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (!isConfigured()) return
-    let live = true
+    let active = true
+    let unsubscribe = () => {}
+
+    const flash = (names: string[]) => {
+      setFlashing(new Set(names))
+      if (flashTimer.current) clearTimeout(flashTimer.current)
+      flashTimer.current = setTimeout(() => {
+        if (active) setFlashing(new Set())
+      }, 1000)
+    }
+
+    // live refresh on each new result — diff against the shown rows to flash changes
+    const refresh = () => {
+      fetchLeaderboard()
+        .then((data) => {
+          if (!active) return
+          const sorted = sortRows(data)
+          // ignore a transient empty refetch when a populated board is already shown
+          if (sorted.length === 0 && rowsRef.current.length > 0) return
+          const changed = changedPlayers(rowsRef.current, sorted)
+          if (changed.length > 0) flash(changed)
+          rowsRef.current = sorted
+          setRows(sorted)
+        })
+        .catch(() => {
+          // keep the current board on a transient refresh failure
+        })
+    }
+
+    // initial load first, then subscribe — so the first live event diffs against
+    // real data instead of an empty board (which would flash every row).
     fetchLeaderboard()
       .then((data) => {
-        if (!live) return
-        const sorted = [...data].sort((a, b) => b.wins - a.wins || a.games - b.games)
+        if (!active) return
+        const sorted = sortRows(data)
+        rowsRef.current = sorted
         setRows(sorted)
         setStatus('ready')
+        unsubscribe = subscribeToResults(refresh, (connected) => {
+          if (active) setLive(connected)
+        })
       })
       .catch(() => {
-        if (live) setStatus('error')
+        if (active) setStatus('error')
       })
+
     return () => {
-      live = false
+      active = false
+      if (flashTimer.current) clearTimeout(flashTimer.current)
+      unsubscribe()
     }
   }, [])
 
   return (
     <div className="overlay">
       <div className="modal">
-        <h2>🏆 Leaderboard</h2>
+        <h2>
+          🏆 Leaderboard
+          {live && <span className="live-badge">● Live</span>}
+        </h2>
 
         {status === 'loading' && <p className="setup-note">Loading…</p>}
         {status === 'disabled' && <p className="setup-note">The leaderboard isn't configured.</p>}
@@ -59,7 +115,12 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
               {rows.map((r, i) => (
                 <tr
                   key={r.player_name}
-                  className={r.player_name === currentName ? 'score-winner' : ''}
+                  className={[
+                    r.player_name === currentName ? 'score-winner' : '',
+                    flashing.has(r.player_name) ? 'row-flash' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <td>{i + 1}</td>
                   <td>{r.player_name}</td>

@@ -1,12 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames } from './leaderboard'
+import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames, changedPlayers, subscribeToResults } from './leaderboard'
+import { supabase } from './supabase'
 import { initGame } from '../engine/game'
 import { DEFAULT_RULES } from '../engine/types'
 import type { GameState } from '../engine/types'
+import type { LeaderboardRow } from './leaderboard'
+
+vi.mock('./supabase', () => ({ supabase: vi.fn() }))
 
 afterEach(() => {
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
 describe('isConfigured', () => {
@@ -142,6 +147,80 @@ describe('fetchLeaderboard', () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     expect(await fetchLeaderboard()).toEqual([])
+  })
+})
+
+describe('changedPlayers', () => {
+  const base: LeaderboardRow[] = [
+    { player_name: 'Ada', wins: 2, games: 3 },
+    { player_name: 'Bob', wins: 1, games: 4 },
+  ]
+
+  it('returns nothing when prev and next match', () => {
+    expect(changedPlayers(base, base)).toEqual([])
+  })
+
+  it('detects a brand-new player', () => {
+    const next = [...base, { player_name: 'Cy', wins: 1, games: 1 }]
+    expect(changedPlayers(base, next)).toEqual(['Cy'])
+  })
+
+  it('detects an increased win count', () => {
+    const next = [{ player_name: 'Ada', wins: 3, games: 4 }, base[1]]
+    expect(changedPlayers(base, next)).toEqual(['Ada'])
+  })
+
+  it('detects an increased games count with same wins', () => {
+    const next = [base[0], { player_name: 'Bob', wins: 1, games: 5 }]
+    expect(changedPlayers(base, next)).toEqual(['Bob'])
+  })
+})
+
+describe('subscribeToResults', () => {
+  it('returns a callable no-op when unconfigured and never touches the SDK', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+    const unsub = subscribeToResults(() => {})
+    expect(typeof unsub).toBe('function')
+    expect(() => unsub()).not.toThrow()
+    expect(supabase).not.toHaveBeenCalled()
+  })
+
+  it('subscribes to match_results inserts and unsubscribes via removeChannel', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+
+    const channel = {
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+    }
+    const removeChannel = vi.fn()
+    const client = { channel: vi.fn().mockReturnValue(channel), removeChannel }
+    vi.mocked(supabase).mockReturnValue(client as never)
+
+    const onInsert = vi.fn()
+    const onStatus = vi.fn()
+    const unsub = subscribeToResults(onInsert, onStatus)
+
+    expect(client.channel).toHaveBeenCalledWith('leaderboard-results')
+    expect(channel.on).toHaveBeenCalledWith(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'match_results' },
+      expect.any(Function),
+    )
+
+    const insertHandler = channel.on.mock.calls[0][2] as () => void
+    insertHandler()
+    expect(onInsert).toHaveBeenCalledTimes(1)
+
+    const statusCb = channel.subscribe.mock.calls[0][0] as (s: string) => void
+    statusCb('SUBSCRIBED')
+    expect(onStatus).toHaveBeenCalledWith(true)
+    statusCb('CHANNEL_ERROR')
+    expect(onStatus).toHaveBeenCalledWith(false)
+
+    unsub()
+    expect(removeChannel).toHaveBeenCalledWith(channel)
   })
 })
 
