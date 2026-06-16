@@ -1,5 +1,6 @@
 import { TARGET_SCORE, type GameState } from '../engine/types'
 import { supabaseEnv } from './env'
+import { supabase } from './supabase'
 
 let bannedNames = new Set<string>()
 
@@ -101,4 +102,27 @@ export function changedPlayers(prev: LeaderboardRow[], next: LeaderboardRow[]): 
     }
   }
   return changed
+}
+
+/**
+ * Live-subscribe to new match results. Calls `onInsert` on every inserted row and
+ * `onStatus(connected)` as the channel connects/disconnects. Returns an unsubscribe
+ * function. No-op (returns a callable that does nothing) when Supabase isn't configured.
+ */
+export function subscribeToResults(
+  onInsert: () => void,
+  onStatus?: (connected: boolean) => void,
+): () => void {
+  if (!isConfigured()) return () => {}
+  const channel = supabase()
+    .channel('leaderboard-results')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'match_results' },
+      () => onInsert(),
+    )
+    .subscribe((status) => onStatus?.(status === 'SUBSCRIBED'))
+  return () => {
+    supabase().removeChannel(channel)
+  }
 }

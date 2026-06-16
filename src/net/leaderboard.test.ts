@@ -1,13 +1,17 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames, changedPlayers } from './leaderboard'
+import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames, changedPlayers, subscribeToResults } from './leaderboard'
+import { supabase } from './supabase'
 import { initGame } from '../engine/game'
 import { DEFAULT_RULES } from '../engine/types'
 import type { GameState } from '../engine/types'
 import type { LeaderboardRow } from './leaderboard'
 
+vi.mock('./supabase', () => ({ supabase: vi.fn() }))
+
 afterEach(() => {
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
+  vi.clearAllMocks()
 })
 
 describe('isConfigured', () => {
@@ -169,6 +173,52 @@ describe('changedPlayers', () => {
   it('detects an increased games count with same wins', () => {
     const next = [base[0], { player_name: 'Bob', wins: 1, games: 5 }]
     expect(changedPlayers(base, next)).toEqual(['Bob'])
+  })
+})
+
+describe('subscribeToResults', () => {
+  it('returns a callable no-op when unconfigured and never touches the SDK', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', '')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', '')
+    const unsub = subscribeToResults(() => {})
+    expect(typeof unsub).toBe('function')
+    expect(() => unsub()).not.toThrow()
+    expect(supabase).not.toHaveBeenCalled()
+  })
+
+  it('subscribes to match_results inserts and unsubscribes via removeChannel', () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+
+    const channel = {
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+    }
+    const removeChannel = vi.fn()
+    const client = { channel: vi.fn().mockReturnValue(channel), removeChannel }
+    vi.mocked(supabase).mockReturnValue(client as never)
+
+    const onInsert = vi.fn()
+    const onStatus = vi.fn()
+    const unsub = subscribeToResults(onInsert, onStatus)
+
+    expect(client.channel).toHaveBeenCalledWith('leaderboard-results')
+    expect(channel.on).toHaveBeenCalledWith(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'match_results' },
+      expect.any(Function),
+    )
+
+    const insertHandler = channel.on.mock.calls[0][2] as () => void
+    insertHandler()
+    expect(onInsert).toHaveBeenCalledTimes(1)
+
+    const statusCb = channel.subscribe.mock.calls[0][0] as (s: string) => void
+    statusCb('SUBSCRIBED')
+    expect(onStatus).toHaveBeenCalledWith(true)
+
+    unsub()
+    expect(removeChannel).toHaveBeenCalledWith(channel)
   })
 })
 
