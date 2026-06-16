@@ -1,4 +1,4 @@
-import { TARGET_SCORE, type GameState } from '../engine/types'
+import type { GameState } from '../engine/types'
 import { supabaseEnv } from './env'
 import { supabase } from './supabase'
 
@@ -81,11 +81,11 @@ export async function loadBannedNames(): Promise<void> {
 
 /** The human (seat 0) result for a completed solo match, or null if the match isn't over. */
 export function matchResultFor(state: GameState, playerName: string): MatchResult | null {
-  const matchOver = state.phase === 'roundOver' && state.scores.some((s) => s >= TARGET_SCORE)
+  const matchOver = state.phase === 'roundOver' && state.scores.some((s) => s >= state.targetScore)
   if (!matchOver) return null
   return {
     playerName,
-    won: state.scores[0] >= TARGET_SCORE,
+    won: state.scores[0] >= state.targetScore,
     points: state.scores[0],
     caughtOpponents: 0,  // caller (useGame) overrides this with the real count
   }
