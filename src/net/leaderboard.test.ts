@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames } from './leaderboard'
+import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames, changedPlayers } from './leaderboard'
 import { initGame } from '../engine/game'
 import { DEFAULT_RULES } from '../engine/types'
 import type { GameState } from '../engine/types'
+import type { LeaderboardRow } from './leaderboard'
 
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -142,6 +143,32 @@ describe('fetchLeaderboard', () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     expect(await fetchLeaderboard()).toEqual([])
+  })
+})
+
+describe('changedPlayers', () => {
+  const base: LeaderboardRow[] = [
+    { player_name: 'Ada', wins: 2, games: 3 },
+    { player_name: 'Bob', wins: 1, games: 4 },
+  ]
+
+  it('returns nothing when prev and next match', () => {
+    expect(changedPlayers(base, base)).toEqual([])
+  })
+
+  it('detects a brand-new player', () => {
+    const next = [...base, { player_name: 'Cy', wins: 1, games: 1 }]
+    expect(changedPlayers(base, next)).toEqual(['Cy'])
+  })
+
+  it('detects an increased win count', () => {
+    const next = [{ player_name: 'Ada', wins: 3, games: 4 }, base[1]]
+    expect(changedPlayers(base, next)).toEqual(['Ada'])
+  })
+
+  it('detects an increased games count with same wins', () => {
+    const next = [base[0], { player_name: 'Bob', wins: 1, games: 5 }]
+    expect(changedPlayers(base, next)).toEqual(['Bob'])
   })
 })
 

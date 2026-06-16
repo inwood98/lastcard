@@ -89,3 +89,16 @@ export function matchResultFor(state: GameState, playerName: string): MatchResul
     caughtOpponents: 0,  // caller (useGame) overrides this with the real count
   }
 }
+
+/** player_names in `next` that are new or whose wins/games differ from `prev`. */
+export function changedPlayers(prev: LeaderboardRow[], next: LeaderboardRow[]): string[] {
+  const before = new Map(prev.map((r) => [r.player_name, r]))
+  const changed: string[] = []
+  for (const row of next) {
+    const old = before.get(row.player_name)
+    if (!old || old.wins !== row.wins || old.games !== row.games) {
+      changed.push(row.player_name)
+    }
+  }
+  return changed
+}
