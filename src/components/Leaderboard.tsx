@@ -1,5 +1,11 @@
-import { useEffect, useState } from 'react'
-import { fetchLeaderboard, isConfigured, type LeaderboardRow } from '../net/leaderboard'
+import { useEffect, useRef, useState } from 'react'
+import {
+  changedPlayers,
+  fetchLeaderboard,
+  isConfigured,
+  subscribeToResults,
+  type LeaderboardRow,
+} from '../net/leaderboard'
 
 interface LeaderboardProps {
   /** highlight this player's row */
@@ -9,34 +15,77 @@ interface LeaderboardProps {
 
 type Status = 'loading' | 'ready' | 'error' | 'disabled'
 
+function sortRows(data: LeaderboardRow[]): LeaderboardRow[] {
+  return [...data].sort((a, b) => b.wins - a.wins || a.games - b.games)
+}
+
 export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
   const [rows, setRows] = useState<LeaderboardRow[]>([])
   const [status, setStatus] = useState<Status>(() =>
     isConfigured() ? 'loading' : 'disabled',
   )
+  const [live, setLive] = useState(false)
+  const [flashing, setFlashing] = useState<Set<string>>(new Set())
+  const rowsRef = useRef<LeaderboardRow[]>([])
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    rowsRef.current = rows
+  }, [rows])
 
   useEffect(() => {
     if (!isConfigured()) return
-    let live = true
-    fetchLeaderboard()
-      .then((data) => {
-        if (!live) return
-        const sorted = [...data].sort((a, b) => b.wins - a.wins || a.games - b.games)
-        setRows(sorted)
-        setStatus('ready')
-      })
-      .catch(() => {
-        if (live) setStatus('error')
-      })
+    let active = true
+
+    const flash = (names: string[]) => {
+      setFlashing(new Set(names))
+      if (flashTimer.current) clearTimeout(flashTimer.current)
+      flashTimer.current = setTimeout(() => {
+        if (active) setFlashing(new Set())
+      }, 1000)
+    }
+
+    const refresh = (isInitial: boolean) => {
+      fetchLeaderboard()
+        .then((data) => {
+          if (!active) return
+          const sorted = sortRows(data)
+          // ignore a transient empty refetch when a populated board is already shown
+          if (!isInitial && sorted.length === 0 && rowsRef.current.length > 0) return
+          if (!isInitial) {
+            const changed = changedPlayers(rowsRef.current, sorted)
+            if (changed.length > 0) flash(changed)
+          }
+          setRows(sorted)
+          setStatus('ready')
+        })
+        .catch(() => {
+          if (active && isInitial) setStatus('error')
+        })
+    }
+
+    refresh(true)
+    const unsubscribe = subscribeToResults(
+      () => refresh(false),
+      (connected) => {
+        if (active) setLive(connected)
+      },
+    )
+
     return () => {
-      live = false
+      active = false
+      if (flashTimer.current) clearTimeout(flashTimer.current)
+      unsubscribe()
     }
   }, [])
 
   return (
     <div className="overlay">
       <div className="modal">
-        <h2>🏆 Leaderboard</h2>
+        <h2>
+          🏆 Leaderboard
+          {live && <span className="live-badge">● Live</span>}
+        </h2>
 
         {status === 'loading' && <p className="setup-note">Loading…</p>}
         {status === 'disabled' && <p className="setup-note">The leaderboard isn't configured.</p>}
@@ -59,7 +108,12 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
               {rows.map((r, i) => (
                 <tr
                   key={r.player_name}
-                  className={r.player_name === currentName ? 'score-winner' : ''}
+                  className={[
+                    r.player_name === currentName ? 'score-winner' : '',
+                    flashing.has(r.player_name) ? 'row-flash' : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <td>{i + 1}</td>
                   <td>{r.player_name}</td>
