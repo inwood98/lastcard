@@ -420,7 +420,7 @@
 }
 
 .scoreboard .row-flash td {
-  animation: lb-flash 1s ease-out;
+  animation: lb-flash 1s ease-out forwards;
 }
 
 .live-badge {

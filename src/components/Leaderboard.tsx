@@ -26,16 +26,15 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
   )
   const [live, setLive] = useState(false)
   const [flashing, setFlashing] = useState<Set<string>>(new Set())
+  // mirrors `rows` so the live-refresh closure always diffs against what's shown;
+  // set synchronously next to every setRows so a fast first event isn't stale.
   const rowsRef = useRef<LeaderboardRow[]>([])
   const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    rowsRef.current = rows
-  }, [rows])
-
-  useEffect(() => {
     if (!isConfigured()) return
     let active = true
+    let unsubscribe = () => {}
 
     const flash = (names: string[]) => {
       setFlashing(new Set(names))
@@ -45,32 +44,40 @@ export function Leaderboard({ currentName, onClose }: LeaderboardProps) {
       }, 1000)
     }
 
-    const refresh = (isInitial: boolean) => {
+    // live refresh on each new result — diff against the shown rows to flash changes
+    const refresh = () => {
       fetchLeaderboard()
         .then((data) => {
           if (!active) return
           const sorted = sortRows(data)
           // ignore a transient empty refetch when a populated board is already shown
-          if (!isInitial && sorted.length === 0 && rowsRef.current.length > 0) return
-          if (!isInitial) {
-            const changed = changedPlayers(rowsRef.current, sorted)
-            if (changed.length > 0) flash(changed)
-          }
+          if (sorted.length === 0 && rowsRef.current.length > 0) return
+          const changed = changedPlayers(rowsRef.current, sorted)
+          if (changed.length > 0) flash(changed)
+          rowsRef.current = sorted
           setRows(sorted)
-          setStatus('ready')
         })
         .catch(() => {
-          if (active && isInitial) setStatus('error')
+          // keep the current board on a transient refresh failure
         })
     }
 
-    refresh(true)
-    const unsubscribe = subscribeToResults(
-      () => refresh(false),
-      (connected) => {
-        if (active) setLive(connected)
-      },
-    )
+    // initial load first, then subscribe — so the first live event diffs against
+    // real data instead of an empty board (which would flash every row).
+    fetchLeaderboard()
+      .then((data) => {
+        if (!active) return
+        const sorted = sortRows(data)
+        rowsRef.current = sorted
+        setRows(sorted)
+        setStatus('ready')
+        unsubscribe = subscribeToResults(refresh, (connected) => {
+          if (active) setLive(connected)
+        })
+      })
+      .catch(() => {
+        if (active) setStatus('error')
+      })
 
     return () => {
       active = false
