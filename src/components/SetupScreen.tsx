@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { Difficulty, HouseRules } from '../engine/types'
+import { TARGET_SCORES, type Difficulty, type HouseRules } from '../engine/types'
 import type { GameSettings } from '../hooks/useGame'
 import { Card } from './Card'
 import { Leaderboard } from './Leaderboard'
@@ -46,13 +46,14 @@ export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }:
   const [botCount, setBotCount] = useState(initial.botCount)
   const [difficulty, setDifficulty] = useState<Difficulty>(initial.difficulty)
   const [rules, setRules] = useState<HouseRules>(initial.rules)
+  const [targetScore, setTargetScore] = useState(initial.targetScore)
 
   const settings: GameSettings = {
     playerName: name.trim() || 'You',
     botCount,
     difficulty,
     rules,
-    targetScore: initial.targetScore,
+    targetScore,
   }
 
   const submit = () => {
@@ -157,6 +158,21 @@ export function SetupScreen({ initial, initialJoinCode, savedSummary, onStart }:
                     onClick={() => setDifficulty(d.value)}
                   >
                     {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="setup-field">
+              <span>First to</span>
+              <div className="setup-options">
+                {TARGET_SCORES.map((n) => (
+                  <button
+                    key={n}
+                    className={n === targetScore ? 'option selected' : 'option'}
+                    onClick={() => setTargetScore(n)}
+                  >
+                    {n}
                   </button>
                 ))}
               </div>
