@@ -14,6 +14,9 @@ online table for 2–4 friends (bots fill the empty seats).
   no accounts or servers needed
 - Choose Easy / Medium / Hard bots and toggleable house rules: stacking Draw Twos,
   draw-until-you-can-play, and the Wild Draw Four challenge
+- Sound effects (synthesized via Web Audio API) and card-flight animations with color-flash and
+  confetti on win; sounds can be toggled off in the menu
+- Auto-save for solo games — resume exactly where you left off after closing the tab
 - In-game menu with rules reference, restart, and end game; settings remembered between visits
 - Responsive layout for desktop and mobile
 
@@ -30,7 +33,9 @@ npm run deploy  # test, build, and publish to GitHub Pages
 The game logic lives in `src/engine/` as a pure, fully unit-tested reducer with no React
 dependencies; `src/ai/` contains the bot strategies; `src/net/` holds the host-authoritative
 multiplayer (protocol, redacted views, PeerJS transport); React components in `src/components/`
-render the table.
+render the table. `src/fx/` drives synthesized sounds and card-flight animations; `src/hooks/`
+holds the game-state hooks for solo, host, and guest flows; `src/save.ts` and `src/storage.ts`
+handle save/resume via localStorage.
 
 Deployment publishes the built `dist/` folder to the `gh-pages` branch, which GitHub Pages
 serves at the URL above.
