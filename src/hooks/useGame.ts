@@ -73,6 +73,7 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
 
   const driverRef = useRef<BotDriver | null>(null)
   const submittedRef = useRef(false)
+  const catchCountRef = useRef(0)
   useEffect(() => {
     driverRef.current = new BotDriver(settings.difficulty, dispatch)
     return () => {
@@ -91,7 +92,7 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
       clearSavedGame()
       if (!submittedRef.current) {
         submittedRef.current = true
-        void submitResult(result)
+        void submitResult({ ...result, caughtOpponents: catchCountRef.current })
       }
     } else {
       submittedRef.current = false
@@ -99,5 +100,14 @@ export function useGame(settings: GameSettings, initialState?: GameState): GameA
     }
   }, [state, settings.playerName, settings.difficulty])
 
-  return useMemo(() => makeApi(state, 0, dispatch), [state])
+  return useMemo(
+    () => ({
+      ...makeApi(state, 0, dispatch),
+      catchPlayer: (targetId: number) => {
+        catchCountRef.current++
+        dispatch({ type: 'CATCH_LAST_CARD', callerId: 0, targetId })
+      },
+    }),
+    [state],
+  )
 }
