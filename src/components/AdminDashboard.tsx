@@ -32,31 +32,56 @@ export function AdminDashboard({ onSignOut }: { onSignOut: () => void }) {
 
   const handleDeletePlayer = async (name: string) => {
     if (!confirm(`Delete ALL results for "${name}"?`)) return
-    await deletePlayerResults(name)
+    try {
+      await deletePlayerResults(name)
+    } catch (err) {
+      alert(`Failed to delete: ${String(err)}`)
+      return
+    }
     await reload()
   }
 
   const handleBanPlayer = async (name: string) => {
     if (!confirm(`Ban "${name}"? Their results will be hidden and future submissions blocked.`)) return
-    await banName(name)
+    try {
+      await banName(name)
+    } catch (err) {
+      alert(`Failed to ban: ${String(err)}`)
+      return
+    }
     await reload()
   }
 
   const handleDeleteMatch = async (id: string) => {
     if (!confirm('Delete this match result?')) return
-    await deleteMatchResult(id)
+    try {
+      await deleteMatchResult(id)
+    } catch (err) {
+      alert(`Failed to delete: ${String(err)}`)
+      return
+    }
     await reload()
   }
 
   const handleUnban = async (name: string) => {
-    await unbanName(name)
+    try {
+      await unbanName(name)
+    } catch (err) {
+      alert(`Failed to unban: ${String(err)}`)
+      return
+    }
     await reload()
   }
 
   const handleAddBan = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newBan.trim()) return
-    await banName(newBan.trim())
+    try {
+      await banName(newBan.trim())
+    } catch (err) {
+      alert(`Failed to ban: ${String(err)}`)
+      return
+    }
     setNewBan('')
     await reload()
   }
