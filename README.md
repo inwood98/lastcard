@@ -38,41 +38,30 @@ handle save/resume via localStorage.
 Deployment publishes the built `dist/` folder to the `gh-pages` branch, which GitHub Pages
 serves at the URL above.
 
-### Global leaderboard (optional)
+### Backend setup (Supabase — optional)
 
-The setup screen's 🏆 Leaderboard reads from a [Supabase](https://supabase.com) project and
-ranks players by matches won. Solo games submit a result when a match ends. Without
-configuration the button shows "not configured" and the game works normally.
+The global leaderboard, the "My Stats" page, and the admin dashboard all read from a
+[Supabase](https://supabase.com) project. Without configuration these features show "not
+configured" and the rest of the game works normally.
 
 To enable it:
 
-1. Create a free Supabase project and run this in the SQL editor:
+1. Create a free Supabase project.
+2. Open the SQL editor and run [`docs/supabase-setup.sql`](docs/supabase-setup.sql) — it creates
+   the `match_results` and `banned_names` tables, the `leaderboard` view, and the row-level
+   security policies.
+3. **Authentication → Users → Add user** — create your admin account (email + password, with
+   "Auto Confirm User" checked).
+4. **Authentication → Sign In / Providers** — turn **off** "Allow new users to sign up". The
+   admin policies grant full delete/ban power to any signed-in user, so sign-ups must be
+   invite-only.
+5. Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
+   from **Settings → API**. These get baked into the bundle at build time, so re-run
+   `npm run build` / `npm run deploy` after changing them.
 
-   ```sql
-   create table match_results (
-     id uuid primary key default gen_random_uuid(),
-     player_name text not null,
-     won boolean not null,
-     points int,
-     mode text default 'solo',
-     created_at timestamptz default now()
-   );
+The admin dashboard lives at the `#admin` URL hash (e.g. `…/lastcard/#admin`) and signs in via
+Supabase Auth.
 
-   create view leaderboard as
-   select player_name,
-          count(*) filter (where won) as wins,
-          count(*) as games
-   from match_results
-   group by player_name;
-
-   alter table match_results enable row level security;
-   create policy "anon insert" on match_results for insert to anon with check (true);
-   grant select on leaderboard to anon;
-   ```
-
-2. Copy `.env.example` to `.env` and fill in `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`
-   from Settings → API. These get baked into the bundle at build time.
-3. `npm run build` / `npm run deploy` picks them up.
-
-There is no authentication or anti-cheat: any client can submit results. This is a deliberate
-starting point — add auth and server-side validation later if it becomes a problem.
+There is no anti-cheat: any client can submit results, and results are publicly readable (this
+is what powers "My Stats"). That's a deliberate starting point — add server-side validation
+later if it becomes a problem.
