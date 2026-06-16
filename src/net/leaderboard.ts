@@ -1,6 +1,8 @@
 import { TARGET_SCORE, type GameState } from '../engine/types'
 import { supabaseEnv } from './env'
 
+let bannedNames = new Set<string>()
+
 export interface LeaderboardRow {
   player_name: string
   wins: number
@@ -60,8 +62,6 @@ export async function fetchLeaderboard(): Promise<LeaderboardRow[]> {
     return []
   }
 }
-
-let bannedNames = new Set<string>()
 
 export async function loadBannedNames(): Promise<void> {
   const { url, anon } = supabaseEnv()

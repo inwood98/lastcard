@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { isConfigured, submitResult, fetchLeaderboard, matchResultFor } from './leaderboard'
+import { isConfigured, submitResult, fetchLeaderboard, matchResultFor, loadBannedNames } from './leaderboard'
 import { initGame } from '../engine/game'
 import { DEFAULT_RULES } from '../engine/types'
 import type { GameState } from '../engine/types'
@@ -61,6 +61,57 @@ describe('submitResult', () => {
     vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('offline')))
     await expect(submitResult({ playerName: 'Ada', won: true, points: 1, caughtOpponents: 0 })).resolves.toBeUndefined()
+  })
+})
+
+describe('loadBannedNames', () => {
+  it('loadBannedNames populates the ban set and silently ignores errors', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+
+    // No-op when fetch fails
+    vi.stubGlobal('fetch', async () => { throw new Error('network error') })
+    await expect(loadBannedNames()).resolves.toBeUndefined()
+
+    // Populates set when fetch succeeds
+    vi.stubGlobal('fetch', async () => ({
+      ok: true,
+      json: async () => [{ name: 'Spammer' }, { name: 'CHEATER' }],
+    } as Response))
+    await loadBannedNames()
+    // Verify by checking submitResult skips fetch for banned name
+    let called = false
+    vi.stubGlobal('fetch', async () => { called = true; return { ok: true, json: async () => [] } as Response })
+    await submitResult({ playerName: 'spammer', won: false, points: 0, caughtOpponents: 0 })
+    expect(called).toBe(false)  // lowercase 'spammer' should be banned (case-insensitive)
+  })
+})
+
+describe('submitResult ban enforcement', () => {
+  it('skips fetch when player is banned', async () => {
+    vi.stubEnv('VITE_SUPABASE_URL', 'https://x.supabase.co')
+    vi.stubEnv('VITE_SUPABASE_ANON_KEY', 'anon-key')
+
+    let fetchCallCount = 0
+    vi.stubGlobal('fetch', async (url: string) => {
+      fetchCallCount++
+      if (String(url).includes('banned_names')) {
+        return { ok: true, json: async () => [{ name: 'BadPlayer' }] } as Response
+      }
+      return { ok: true, json: async () => [] } as Response
+    })
+
+    // Load banned names (seeds the module-level Set)
+    await loadBannedNames()
+    fetchCallCount = 0  // reset after loadBannedNames call
+
+    // Now submitResult with a banned name should skip fetch
+    await submitResult({ playerName: 'BadPlayer', won: true, points: 100, caughtOpponents: 0 })
+    expect(fetchCallCount).toBe(0)
+
+    // But a non-banned player should still submit
+    await submitResult({ playerName: 'GoodPlayer', won: true, points: 100, caughtOpponents: 0 })
+    expect(fetchCallCount).toBe(1)
   })
 })
 
