@@ -22,7 +22,7 @@ export default function App() {
   const [lastSettings, setLastSettings] = useState(loadSettings)
   const [savedGame, setSavedGame] = useState(loadSavedGame)
   const [gameKey, setGameKey] = useState(0)
-  // arriving via an invite link (…/uno/?join=CODE) opens the join screen pre-filled
+  // arriving via an invite link (…/lastcard/?join=CODE) opens the join screen pre-filled
   const [inviteCode] = useState(() => new URLSearchParams(location.search).get('join'))
   // re-read the save when coming back to the menu (a finished match clears it,
   // quitting mid-game leaves it resumable)

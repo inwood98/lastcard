@@ -1,7 +1,7 @@
 import { DEFAULT_RULES } from './engine/types'
 import type { GameSettings } from './hooks/useGame'
 
-const KEY = 'uno-settings'
+const KEY = 'lastcard-settings'
 
 export const DEFAULT_SETTINGS: GameSettings = {
   playerName: '',
@@ -40,7 +40,7 @@ export interface FxPrefs {
   animations: boolean
 }
 
-const FX_KEY = 'uno-fx'
+const FX_KEY = 'lastcard-fx'
 
 export const DEFAULT_FX: FxPrefs = { sound: true, animations: true }
 

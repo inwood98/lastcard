@@ -9,7 +9,7 @@ import { GameMenu } from './GameMenu'
 import { Hand } from './Hand'
 import { OpponentSeat } from './OpponentSeat'
 import { PilesArea } from './PilesArea'
-import { UnoControls } from './UnoControls'
+import { LastCardControls } from './LastCardControls'
 import { WinScreen } from './WinScreen'
 import { Leaderboard } from './Leaderboard'
 import './table.css'
@@ -50,7 +50,7 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner, solo
 
   const showColorPicker = state.phase === 'chooseColor' && state.currentPlayer === viewerId
   const showChallenge = state.phase === 'challenge' && state.pendingWild4?.targetId === viewerId
-  const showUno = handSize(viewer) <= 2 && !viewer.calledUno && state.winner === null
+  const showLastCard = handSize(viewer) <= 2 && !viewer.calledLastCard && state.winner === null
 
   return (
     <div className="table">
@@ -98,16 +98,16 @@ export function GameTable({ game, onPlayAgain, onNewMatch, onLeave, banner, solo
           <div className="player-name">
             {viewer.name}
             <span className="score-chip">{state.scores[viewerId]} pts</span>
-            {viewer.calledUno && handSize(viewer) === 1 && (
-              <span className="uno-badge">LAST CARD!</span>
+            {viewer.calledLastCard && handSize(viewer) === 1 && (
+              <span className="lastcard-badge">LAST CARD!</span>
             )}
             {myTurn && <span className="turn-tag">Your turn</span>}
           </div>
-          <UnoControls
+          <LastCardControls
             state={state}
             viewerId={viewerId}
-            showUno={showUno}
-            onCallUno={game.callUno}
+            showLastCard={showLastCard}
+            onCallLastCard={game.callLastCard}
             onCatch={game.catchPlayer}
             canPass={myTurn && state.drawnCardId !== null}
             onPass={game.pass}

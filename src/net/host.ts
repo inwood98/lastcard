@@ -243,9 +243,9 @@ export class HostSession {
       case 'DRAW_CARD':
       case 'PASS':
       case 'TAKE_PENALTY':
-      case 'CALL_UNO':
+      case 'CALL_LAST_CARD':
         return action.playerId === seatId
-      case 'CATCH_UNO':
+      case 'CATCH_LAST_CARD':
         return action.callerId === seatId
       case 'CHOOSE_COLOR':
         return this.state!.phase === 'chooseColor' && this.state!.currentPlayer === seatId

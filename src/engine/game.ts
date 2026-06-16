@@ -41,7 +41,7 @@ export function initGame(config: GameConfig): GameState {
     name: seat.name,
     isHuman: seat.isHuman,
     hand: [],
-    calledUno: false,
+    calledLastCard: false,
   }))
   for (let i = 0; i < HAND_SIZE; i++) {
     for (const p of players) p.hand.push(drawPile.pop()!)
@@ -137,7 +137,7 @@ function drawCards(state: GameState, playerId: number, n: number): Card[] {
     player.hand.push(card)
     drawn.push(card)
   }
-  if (player.hand.length !== 1) player.calledUno = false
+  if (player.hand.length !== 1) player.calledLastCard = false
   return drawn
 }
 
@@ -245,8 +245,8 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       const label = cardLabel(card)
       addEvent(state, `${player.name} plays ${label}`, { kind: 'play', playerId, cardId })
 
-      if (player.hand.length === 1 && player.calledUno) {
-        addEvent(state, `${player.name} calls "Last card!"`, { kind: 'uno', playerId })
+      if (player.hand.length === 1 && player.calledLastCard) {
+        addEvent(state, `${player.name} calls "Last card!"`, { kind: 'lastcard', playerId })
       }
       if (player.hand.length === 0) {
         // Round ends immediately, but a final Draw card still hits the next player
@@ -409,25 +409,25 @@ export function gameReducer(prev: GameState, action: GameAction): GameState {
       return state
     }
 
-    case 'CALL_UNO': {
+    case 'CALL_LAST_CARD': {
       const player = state.players[action.playerId]
-      if (player.hand.length > 2 || player.calledUno || state.winner !== null) return prev
-      player.calledUno = true
+      if (player.hand.length > 2 || player.calledLastCard || state.winner !== null) return prev
+      player.calledLastCard = true
       if (player.hand.length === 1) {
         addEvent(state, `${player.name} calls "Last card!"`, {
-          kind: 'uno',
+          kind: 'lastcard',
           playerId: action.playerId,
         })
       }
       return state
     }
 
-    case 'CATCH_UNO': {
+    case 'CATCH_LAST_CARD': {
       const target = state.players[action.targetId]
       if (
         state.winner !== null ||
         target.hand.length !== 1 ||
-        target.calledUno ||
+        target.calledLastCard ||
         action.callerId === action.targetId
       ) {
         return prev

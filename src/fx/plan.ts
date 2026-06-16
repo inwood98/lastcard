@@ -1,7 +1,7 @@
 import type { Card, Color, GameEvent, GameState } from '../engine/types'
 
 export type SoundName =
-  | 'play' | 'draw' | 'thud' | 'skip' | 'reverse' | 'wild' | 'uno'
+  | 'play' | 'draw' | 'thud' | 'skip' | 'reverse' | 'wild' | 'lastcard'
   | 'caught' | 'shuffle' | 'fanfare' | 'bigFanfare'
 
 export interface Flight {
@@ -97,8 +97,8 @@ export function cueForEvent(e: GameEvent, state: GameState, viewerId: number): F
       cue.sounds.push('wild')
       cue.flashColor = e.color
       break
-    case 'uno':
-      cue.sounds.push('uno')
+    case 'lastcard':
+      cue.sounds.push('lastcard')
       break
     case 'reshuffle':
       cue.sounds.push('shuffle')

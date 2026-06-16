@@ -79,11 +79,11 @@
   cursor: pointer;
 }
 
-.draw-pile-active .uno-card {
+.draw-pile-active .lastcard-card {
   filter: drop-shadow(0 0 10px rgba(255, 206, 0, 0.8)) drop-shadow(0 3px 5px rgba(0, 0, 0, 0.45));
 }
 
-.draw-pile-active:hover .uno-card {
+.draw-pile-active:hover .lastcard-card {
   transform: translateY(-6px);
 }
 
@@ -178,7 +178,7 @@
   border-radius: 999px;
 }
 
-.uno-badge {
+.lastcard-badge {
   background: #eb1c24;
   color: #fff;
   font-size: 12px;
@@ -209,7 +209,7 @@
 
 /* --- controls & modals --- */
 
-.uno-controls {
+.lastcard-controls {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -240,7 +240,7 @@
   background: #ff3038;
 }
 
-.btn-uno {
+.btn-lastcard {
   background: #eb1c24;
   font-style: italic;
   font-weight: 900;
@@ -435,10 +435,10 @@
   .hand {
     gap: 0;
   }
-  .hand .uno-card {
+  .hand .lastcard-card {
     margin: 0 -10px;
   }
-  .hand .uno-card-playable:hover {
+  .hand .lastcard-card-playable:hover {
     transform: translateY(-10px);
   }
   .color-swatch {

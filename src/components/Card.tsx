@@ -173,7 +173,7 @@ function CornerText({ text, fill }: { text: string; fill: string }) {
 
 function CardBack() {
   return (
-    <svg viewBox="0 0 200 300" className="uno-card-svg">
+    <svg viewBox="0 0 200 300" className="lastcard-card-svg">
       <rect x={0} y={0} width={200} height={300} rx={18} fill="#fff" />
       <rect x={8} y={8} width={184} height={284} rx={14} fill="#16161d" />
       <ellipse cx={100} cy={150} rx={88} ry={132} transform="rotate(32 100 150)" fill={CARD_COLORS.red} />
@@ -200,9 +200,9 @@ function CardBack() {
 }
 
 export function Card({ card, faceDown, size = 'md', playable, onClick, activeColor }: CardProps) {
-  const classes = ['uno-card', `uno-card-${size}`]
-  if (playable) classes.push('uno-card-playable')
-  if (onClick) classes.push('uno-card-clickable')
+  const classes = ['lastcard-card', `lastcard-card-${size}`]
+  if (playable) classes.push('lastcard-card-playable')
+  if (onClick) classes.push('lastcard-card-clickable')
 
   if (faceDown || !card) {
     return (
@@ -224,7 +224,7 @@ export function Card({ card, faceDown, size = 'md', playable, onClick, activeCol
       aria-label={ariaLabel(card)}
       style={isWild && activeColor ? { boxShadow: `0 0 14px 4px ${CARD_COLORS[activeColor]}` } : undefined}
     >
-      <svg viewBox="0 0 200 300" className="uno-card-svg">
+      <svg viewBox="0 0 200 300" className="lastcard-card-svg">
         <rect x={0} y={0} width={200} height={300} rx={18} fill="#fff" />
         <rect x={8} y={8} width={184} height={284} rx={14} fill={bg} />
         {!isWild && (

@@ -17,7 +17,7 @@ export function OpponentSeat({ player, score, isCurrent, disconnected }: Opponen
     <div ref={anchorRef(`seat-${player.id}`)} className={isCurrent ? 'seat seat-active' : 'seat'}>
       <div className="seat-name">
         {player.name}
-        {player.calledUno && count === 1 && <span className="uno-badge">LAST CARD!</span>}
+        {player.calledLastCard && count === 1 && <span className="lastcard-badge">LAST CARD!</span>}
         {disconnected && <span className="offline-badge">offline</span>}
       </div>
       <div className="seat-cards">

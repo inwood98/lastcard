@@ -1,32 +1,32 @@
 import type { GameState } from '../engine/types'
 import { handSize } from '../net/redact'
 
-interface UnoControlsProps {
+interface LastCardControlsProps {
   state: GameState
   viewerId: number
-  showUno: boolean
-  onCallUno: () => void
+  showLastCard: boolean
+  onCallLastCard: () => void
   onCatch: (targetId: number) => void
   canPass: boolean
   onPass: () => void
 }
 
-export function UnoControls({
+export function LastCardControls({
   state,
   viewerId,
-  showUno,
-  onCallUno,
+  showLastCard,
+  onCallLastCard,
   onCatch,
   canPass,
   onPass,
-}: UnoControlsProps) {
+}: LastCardControlsProps) {
   const catchable = state.players.filter(
-    (p) => p.id !== viewerId && handSize(p) === 1 && !p.calledUno && state.winner === null,
+    (p) => p.id !== viewerId && handSize(p) === 1 && !p.calledLastCard && state.winner === null,
   )
   return (
-    <div className="uno-controls">
-      {showUno && (
-        <button className="btn btn-uno" onClick={onCallUno}>
+    <div className="lastcard-controls">
+      {showLastCard && (
+        <button className="btn btn-lastcard" onClick={onCallLastCard}>
           LAST CARD!
         </button>
       )}

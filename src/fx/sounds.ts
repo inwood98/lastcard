@@ -92,7 +92,7 @@ export function playSound(name: SoundName) {
       freqs.forEach((f, i) => tone(c, t + i * 0.07, f, 0.18, { gain: 0.12 }))
       break
     }
-    case 'uno':
+    case 'lastcard':
       tone(c, t, 660, 0.12, { type: 'square', gain: 0.1 })
       tone(c, t + 0.13, 990, 0.22, { type: 'square', gain: 0.1 })
       break

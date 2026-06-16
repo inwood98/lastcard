@@ -35,8 +35,8 @@ export interface PlayerState {
   name: string
   isHuman: boolean
   hand: Card[]
-  /** true once UNO has been called for the current 1-card hand */
-  calledUno: boolean
+  /** true once Last Card has been called for the current 1-card hand */
+  calledLastCard: boolean
   /** set on redacted views where hand contents are hidden */
   handCount?: number
 }
@@ -53,7 +53,7 @@ export type EventKind =
   | 'skip'        // a player was skipped
   | 'reverse'     // direction changed
   | 'wildColor'   // a wild color was chosen
-  | 'uno'         // "Last card!" called
+  | 'lastcard'    // "Last card!" called
   | 'caught'      // caught without calling last card
   | 'penalty'     // accumulated draw penalty taken
   | 'challenge'   // wild-draw-four challenge resolved
@@ -112,8 +112,8 @@ export type GameAction =
   | { type: 'DRAW_CARD'; playerId: number }
   | { type: 'PASS'; playerId: number }
   | { type: 'TAKE_PENALTY'; playerId: number }
-  | { type: 'CALL_UNO'; playerId: number }
-  | { type: 'CATCH_UNO'; callerId: number; targetId: number }
+  | { type: 'CALL_LAST_CARD'; playerId: number }
+  | { type: 'CATCH_LAST_CARD'; callerId: number; targetId: number }
   | { type: 'CHALLENGE'; accept: boolean }
 
 export interface Seat {

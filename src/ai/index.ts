@@ -1,14 +1,14 @@
 import { legalCards } from '../engine/rules'
 import { COLORS, type Card, type Color, type Difficulty, type GameAction, type GameState } from '../engine/types'
 
-/** Probability a bot forgets to call UNO when reaching one card */
-export const UNO_FORGET_CHANCE: Record<Difficulty, number> = {
+/** Probability a bot forgets to call Last Card when reaching one card */
+export const LAST_CARD_FORGET_CHANCE: Record<Difficulty, number> = {
   easy: 0.35,
   medium: 0.2,
   hard: 0.08,
 }
 
-/** Probability per check that a bot notices the human's missed UNO call */
+/** Probability per check that a bot notices the human's missed Last Card call */
 export const BOT_CATCH_CHANCE: Record<Difficulty, number> = {
   easy: 0.25,
   medium: 0.5,
@@ -66,7 +66,7 @@ function pickCard(state: GameState, playerId: number, legal: Card[], difficulty:
     if (card.color === null) s -= nextPlayerLow ? -40 : 30
     // Hit a nearly-finished next player with attack cards
     if (nextPlayerLow && (card.value === 'draw2' || card.value === 'skip' || card.value === 'reverse')) s += 35
-    // Dump action cards early so they aren't dead weight (they score high against you in real Uno)
+    // Dump action cards early so they aren't dead weight (they score high against you in Last Card)
     if (isAction(card) && card.color !== null) s += 10
     // Prefer staying on our dominant color so future turns stay flexible
     if (card.color === dominant) s += 15

@@ -27,7 +27,7 @@ function makeState(opts: StateOptions): GameState {
       name: i === 0 ? 'You' : `Bot ${i}`,
       isHuman: i === 0,
       hand,
-      calledUno: false,
+      calledLastCard: false,
     })),
     currentPlayer: opts.currentPlayer ?? 0,
     direction: opts.direction ?? 1,
@@ -334,37 +334,37 @@ describe('drawing', () => {
   })
 })
 
-describe('UNO calls', () => {
-  it('catches a player who did not call UNO', () => {
+describe('Last Card calls', () => {
+  it('catches a player who did not call Last Card', () => {
     const state = makeState({ hands: [[card('blue', 7)], [card('green', 1)]], top: card('red', 5) })
-    const next = gameReducer(state, { type: 'CATCH_UNO', callerId: 0, targetId: 1 })
+    const next = gameReducer(state, { type: 'CATCH_LAST_CARD', callerId: 0, targetId: 1 })
     expect(next.players[1].hand).toHaveLength(3)
   })
 
-  it('cannot catch a player who called UNO', () => {
+  it('cannot catch a player who called Last Card', () => {
     const state = makeState({ hands: [[card('blue', 7)], [card('green', 1)]], top: card('red', 5) })
     state.currentPlayer = 1
-    const called = gameReducer(state, { type: 'CALL_UNO', playerId: 1 })
-    expect(called.players[1].calledUno).toBe(true)
-    const next = gameReducer(called, { type: 'CATCH_UNO', callerId: 0, targetId: 1 })
+    const called = gameReducer(state, { type: 'CALL_LAST_CARD', playerId: 1 })
+    expect(called.players[1].calledLastCard).toBe(true)
+    const next = gameReducer(called, { type: 'CATCH_LAST_CARD', callerId: 0, targetId: 1 })
     expect(next).toBe(called)
   })
 
-  it('calling UNO before playing the second-to-last card persists', () => {
+  it('calling Last Card before playing the second-to-last card persists', () => {
     const c = card('red', 3)
     const state = makeState({ hands: [[c, card('blue', 7)], [card('green', 1)]], top: card('red', 5) })
-    let s = gameReducer(state, { type: 'CALL_UNO', playerId: 0 })
+    let s = gameReducer(state, { type: 'CALL_LAST_CARD', playerId: 0 })
     s = gameReducer(s, { type: 'PLAY_CARD', playerId: 0, cardId: c.id })
-    expect(s.players[0].calledUno).toBe(true)
-    expect(gameReducer(s, { type: 'CATCH_UNO', callerId: 1, targetId: 0 })).toBe(s)
+    expect(s.players[0].calledLastCard).toBe(true)
+    expect(gameReducer(s, { type: 'CATCH_LAST_CARD', callerId: 1, targetId: 0 })).toBe(s)
   })
 
-  it('drawing cards resets the UNO call', () => {
+  it('drawing cards resets the Last Card call', () => {
     const state = makeState({ hands: [[card('blue', 7)], [card('green', 1)]], top: card('red', 5) })
-    state.players[1].calledUno = true
+    state.players[1].calledLastCard = true
     state.currentPlayer = 1
     const next = gameReducer(state, { type: 'DRAW_CARD', playerId: 1 })
-    expect(next.players[1].calledUno).toBe(false)
+    expect(next.players[1].calledLastCard).toBe(false)
   })
 })
 
@@ -470,7 +470,7 @@ describe('event kinds', () => {
     expect(next.events[next.events.length - 1]).toMatchObject({ kind: 'penalty', playerId: 0, count: 4 })
 
     const s2 = makeState({ hands: [[card('blue', 7), card('blue', 8)], [card('green', 2)]], top: card('red', 9) })
-    const caught = gameReducer(s2, { type: 'CATCH_UNO', callerId: 0, targetId: 1 })
+    const caught = gameReducer(s2, { type: 'CATCH_LAST_CARD', callerId: 0, targetId: 1 })
     const e = caught.events.find((ev) => ev.kind === 'caught')
     expect(e).toMatchObject({ playerId: 1, count: 2 })
   })
@@ -491,9 +491,9 @@ describe('event kinds', () => {
     expect(match.events[match.events.length - 1].kind).toBe('matchOver')
   })
 
-  it('tags uno calls', () => {
+  it('tags Last Card calls', () => {
     const state = makeState({ hands: [[card('blue', 7)], [card('green', 2)]], top: card('red', 9) })
-    const next = gameReducer(state, { type: 'CALL_UNO', playerId: 0 })
-    expect(next.events[next.events.length - 1]).toMatchObject({ kind: 'uno', playerId: 0 })
+    const next = gameReducer(state, { type: 'CALL_LAST_CARD', playerId: 0 })
+    expect(next.events[next.events.length - 1]).toMatchObject({ kind: 'lastcard', playerId: 0 })
   })
 })

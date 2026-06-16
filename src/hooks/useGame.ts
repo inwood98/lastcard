@@ -25,7 +25,7 @@ export interface GameApi {
   draw: () => void
   pass: () => void
   takePenalty: () => void
-  callUno: () => void
+  callLastCard: () => void
   catchPlayer: (targetId: number) => void
   challenge: (accept: boolean) => void
 }
@@ -44,8 +44,8 @@ export function makeApi(
     draw: () => dispatch({ type: 'DRAW_CARD', playerId: viewerId }),
     pass: () => dispatch({ type: 'PASS', playerId: viewerId }),
     takePenalty: () => dispatch({ type: 'TAKE_PENALTY', playerId: viewerId }),
-    callUno: () => dispatch({ type: 'CALL_UNO', playerId: viewerId }),
-    catchPlayer: (targetId) => dispatch({ type: 'CATCH_UNO', callerId: viewerId, targetId }),
+    callLastCard: () => dispatch({ type: 'CALL_LAST_CARD', playerId: viewerId }),
+    catchPlayer: (targetId) => dispatch({ type: 'CATCH_LAST_CARD', callerId: viewerId, targetId }),
     challenge: (accept) => dispatch({ type: 'CHALLENGE', accept }),
   }
 }

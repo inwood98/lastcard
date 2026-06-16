@@ -8,7 +8,7 @@ export function nextRandom(seed: number): { value: number; seed: number } {
   return { value: ((x ^ (x >>> 14)) >>> 0) / 4294967296, seed: t }
 }
 
-/** Standard 108-card Uno deck */
+/** Standard 108-card Last Card deck */
 export function buildDeck(): Card[] {
   const cards: Card[] = []
   let id = 0

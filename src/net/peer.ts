@@ -5,12 +5,12 @@ import type { Connection, HostTransport } from './transport'
 /** debug handles for diagnosing connectivity (harmless in production) */
 declare global {
   interface Window {
-    __unoPeers?: Peer[]
+    __lastcardPeers?: Peer[]
   }
 }
 
 function track(peer: Peer): Peer {
-  ;(window.__unoPeers ??= []).push(peer)
+  ;(window.__lastcardPeers ??= []).push(peer)
   return peer
 }
 
@@ -44,7 +44,7 @@ function wrap(dc: DataConnection): Connection {
   }
 }
 
-/** Open a room: registers `uno-game-<code>` with the PeerJS signaling cloud */
+/** Open a room: registers `lastcard-game-<code>` with the PeerJS signaling cloud */
 export function createHostTransport(code: string): Promise<HostTransport> {
   return new Promise((resolve, reject) => {
     const peer = track(new Peer(roomPeerId(code), PEER_OPTIONS))
